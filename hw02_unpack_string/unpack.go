@@ -78,10 +78,9 @@ func inputIsInvalid(s string) bool {
 
 func hasZeroAfterNumber(s string) bool {
 	var prevIsDigit bool
-
 	for _, r := range s {
 		switch {
-		case r == '0' && prevIsDigit:
+		case unicode.IsDigit(r) && prevIsDigit:
 			return true
 		case unicode.IsDigit(r):
 			prevIsDigit = true
