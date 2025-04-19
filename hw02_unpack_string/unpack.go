@@ -66,7 +66,7 @@ func isNextCharZero(inputStr string, i, width int) bool {
 
 func inputIsInvalid(s string) bool {
 	switch {
-	case hasZeroAfterNumber(s):
+	case checkNumber(s):
 		return true
 	case len(s) > 0:
 		_, err := strconv.Atoi(string(s[0]))
@@ -76,7 +76,7 @@ func inputIsInvalid(s string) bool {
 	}
 }
 
-func hasZeroAfterNumber(s string) bool {
+func checkNumber(s string) bool {
 	var prevIsDigit bool
 	for _, r := range s {
 		switch {
