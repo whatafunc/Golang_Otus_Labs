@@ -1,4 +1,4 @@
-module github.com/fixme_my_friend/hw03_frequency_analysis
+module github.com/whatafunc/Golang_Otus_Labs/hw03_frequency_analysis
 
 go 1.23
 
