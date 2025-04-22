@@ -79,4 +79,10 @@ func TestTop10(t *testing.T) {
 			require.Equal(t, expected, Top10(text))
 		}
 	})
+
+	t.Run("check limits", func(t *testing.T) {
+		expected := 10
+		require.Equal(t, expected, len(Top10(text)))
+		require.Less(t, expected-1, len(Top10(text)))
+	})
 }
