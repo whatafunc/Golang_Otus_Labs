@@ -11,9 +11,6 @@ type WordAndFreq struct {
 }
 
 func Top10(input string) []string {
-	if len(input) == 0 {
-		return nil
-	}
 	if !strings.Contains(input, "") {
 		return nil
 	}
@@ -22,9 +19,6 @@ func Top10(input string) []string {
 
 	wordCounter := map[string]int{} // code rafactoring as addressing by key is faster.
 	for _, word := range words {
-		if word == "" {
-			continue
-		}
 		if wordCounter[word] > 0 {
 			wordCounter[word]++
 		} else {
