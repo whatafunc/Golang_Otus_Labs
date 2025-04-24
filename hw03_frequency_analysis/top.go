@@ -11,19 +11,11 @@ type WordAndFreq struct {
 }
 
 func Top10(input string) []string {
-	if !strings.Contains(input, "") {
-		return nil
-	}
-
 	words := strings.Fields(input) // All words splitted by a 'space, ...,... '.
 
 	wordCounter := map[string]int{} // code rafactoring as addressing by key is faster.
 	for _, word := range words {
-		if wordCounter[word] > 0 {
-			wordCounter[word]++
-		} else {
-			wordCounter[word] = 1
-		}
+		wordCounter[word]++
 	}
 
 	wordFreqs := []WordAndFreq{}
