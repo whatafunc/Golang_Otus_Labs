@@ -53,32 +53,18 @@ func TestList(t *testing.T) {
 				l.PushBack(v)
 			}
 		} // [80, 60, 40, 10, 30, 50, 70]
-		if Debug {
-			l.PrintAll() // OK [80, 60, 40, 10, 30, 50, 70]
-		}
 
 		require.Equal(t, 7, l.Len())
 		require.Equal(t, 80, l.Front().Value)
 		require.Equal(t, 70, l.Back().Value)
-		if Debug {
-			l.PrintAll() //
-		}
+
 		l.MoveToFront(l.Front()) // send head elem to start  // [80, 60, 40, 10, 30, 50, 70]
-		if Debug {
-			l.PrintAll() //
-		}
-		l.MoveToFront(l.Back()) // send tail elem to start  // [70, 80, 60, 40, 10, 30, 50]
-		if Debug {
-			l.PrintAll() //
-		}
+		l.MoveToFront(l.Back())  // send tail elem to start  // [70, 80, 60, 40, 10, 30, 50]
 
 		elems := make([]int, 0, l.Len())
 		for i := l.Front(); i != nil; i = i.Next {
 			elems = append(elems, i.Value.(int))
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
-		if Debug {
-			l.PrintAll() //
-		}
 	})
 }

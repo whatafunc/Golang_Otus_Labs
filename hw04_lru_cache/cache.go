@@ -12,6 +12,11 @@ type Cache interface {
 	Clear()
 }
 
+type cacheItem struct { // helper struct to store correspondence between value <> Key
+	key   Key
+	value interface{}
+}
+
 type lruCache struct {
 	capacity int
 	queue    List
@@ -30,7 +35,6 @@ func NewCache(capacity int) Cache {
 func (l *lruCache) Set(key Key, value interface{}) bool {
 	if Debug {
 		fmt.Println("\nLIST items print on Starts: ")
-		l.queue.PrintAll()
 		fmt.Println("\nLRU items print on Starts: ")
 		l.PrintCache()
 		fmt.Println("LRU queue = ", l.queue)
@@ -38,16 +42,15 @@ func (l *lruCache) Set(key Key, value interface{}) bool {
 	wasInCache := false
 
 	if node, found := l.items[key]; found { // если элемент присутствует в словаре,
-		node.Value = value        // то обновить его значение
-		l.queue.MoveToFront(node) // и переместить элемент в начало очереди;
+		node.Value = cacheItem{key: key, value: value} // то обновить его значение
+		l.queue.MoveToFront(node)                      // и переместить элемент в начало очереди;
 		if Debug {
 			fmt.Println("after LRU Update = ", l.queue)
 		}
 		wasInCache = true
 	} else {
-		newNode := l.queue.PushFront(value) // иначе добавить в словарь
-		newNode.Key = key                   // add reference
-		l.items[key] = newNode              // и в начало очереди
+		newNode := l.queue.PushFront(cacheItem{key: key, value: value})
+		l.items[key] = newNode // иначе добавить в словарь
 		if Debug {
 			fmt.Println("LRU after Insert = ", l.queue)
 		}
@@ -57,15 +60,16 @@ func (l *lruCache) Set(key Key, value interface{}) bool {
 	if l.queue.Len() > l.capacity { // если размер очереди больше ёмкости кэша,
 		removed := l.queue.Back()
 		if removed != nil {
-			l.queue.Remove(removed)      // то необходимо удалить последний элемент из очереди
-			delete(l.items, removed.Key) // и его значение из словаря);
+			l.queue.Remove(removed) // то необходимо удалить последний элемент из очереди
+			if item, ok := removed.Value.(cacheItem); ok {
+				delete(l.items, item.key) // и его значение из словаря);
+			}
 		}
 	}
 
 	if Debug {
 		fmt.Println("LRU queue = ", l.queue)
 		fmt.Println("LRU items print: ")
-		l.queue.PrintAll()
 		fmt.Println("\nLRU items print on fyn: ")
 		l.PrintCache()
 	}
@@ -78,7 +82,9 @@ func (l *lruCache) Get(key Key) (interface{}, bool) {
 	var nodeValue interface{}
 	if node, found := l.items[key]; found { // если элемент присутствует в словаре,
 		l.queue.MoveToFront(node) // переместить элемент в начало очереди;
-		nodeValue = node.Value    // и вернуть его значение и true;
+		if item, ok := node.Value.(cacheItem); ok {
+			nodeValue = item.value
+		}
 		if Debug {
 			fmt.Println("after LRU found in GET = ", l.queue)
 		}

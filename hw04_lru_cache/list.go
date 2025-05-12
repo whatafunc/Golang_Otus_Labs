@@ -1,7 +1,5 @@
 package hw04lrucache
 
-import "fmt"
-
 const Debug = false // mode => go test -run '^TestList$'
 type List interface {
 	Len() int
@@ -11,11 +9,9 @@ type List interface {
 	PushBack(v interface{}) *ListItem
 	Remove(i *ListItem)
 	MoveToFront(i *ListItem)
-	PrintAll()
 }
 
 type ListItem struct { // It is simply one entry in the chain..
-	Key   Key         // Used by LRU cache to know which key maps to this item
 	Value interface{} // ..with Value pf any type like struct/int/..
 	Next  *ListItem   // A pointer to the next item in the list.
 	Prev  *ListItem
@@ -102,14 +98,6 @@ func (l *list) Remove(i *ListItem) {
 	// Optionally clear pointers to help GC
 	i.Next = nil
 	i.Prev = nil
-}
-
-func (l *list) PrintAll() {
-	current := l.head
-	for current != nil {
-		fmt.Printf("%v ", current.Value)
-		current = current.Next
-	}
 }
 
 func (l *list) MoveToFront(i *ListItem) {
