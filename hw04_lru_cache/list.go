@@ -106,12 +106,12 @@ func (l *list) MoveToFront(i *ListItem) {
 	}
 
 	// Unlink i from current position
-	if i.Prev != nil {
-		i.Prev.Next = i.Next
-	}
-	if i.Next != nil {
-		i.Next.Prev = i.Prev
-	}
+	// if i.Prev != nil { // начальный существует для всех тк если начальный является стартовым то это отсечено выше уже
+	i.Prev.Next = i.Next
+	//}
+	// if i.Next != nil { // последний существует всегда
+	//	i.Next.Prev = i.Prev
+	//}
 
 	// If i was tail, update tail
 	if l.tail == i {
@@ -121,9 +121,9 @@ func (l *list) MoveToFront(i *ListItem) {
 	// Insert i at front
 	i.Prev = nil
 	i.Next = l.head
-	if l.head != nil {
-		l.head.Prev = i
-	}
+	// if l.head != nil { // первый же есть всегда
+	l.head.Prev = i
+	//}
 	l.head = i
 
 	// If the list was empty (unlikely here), set tail too
