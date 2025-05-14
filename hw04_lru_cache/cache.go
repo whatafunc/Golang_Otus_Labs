@@ -2,6 +2,7 @@ package hw04lrucache
 
 import (
 	"fmt"
+	"sync"
 )
 
 type Key string
@@ -21,6 +22,7 @@ type lruCache struct {
 	capacity int
 	queue    List
 	items    map[Key]*ListItem
+	mu       sync.RWMutex // added to work in concurrent mode
 }
 
 func NewCache(capacity int) Cache {
@@ -39,6 +41,8 @@ func (l *lruCache) Set(key Key, value interface{}) bool {
 		l.PrintCache()
 		fmt.Println("LRU queue = ", l.queue)
 	}
+	l.mu.Lock()         // Lock for write
+	defer l.mu.Unlock() // Unlock when done
 	wasInCache := false
 
 	if node, found := l.items[key]; found { // если элемент присутствует в словаре,
@@ -78,6 +82,8 @@ func (l *lruCache) Set(key Key, value interface{}) bool {
 
 // Get implements Cache.
 func (l *lruCache) Get(key Key) (interface{}, bool) {
+	l.mu.RLock()         // Read lock now
+	defer l.mu.RUnlock() // Unlock after this method gets finished
 	wasInCache := false
 	var nodeValue interface{}
 	if node, found := l.items[key]; found { // если элемент присутствует в словаре,
@@ -98,6 +104,8 @@ func (l *lruCache) Get(key Key) (interface{}, bool) {
 
 // Clear implements LRUCache.
 func (l *lruCache) Clear() {
+	l.mu.Lock()                                   // Lock both Read & Write
+	defer l.mu.Unlock()                           // Unlock
 	l.items = make(map[Key]*ListItem, l.capacity) // new clean Mapa
 	l.queue = NewList()                           // new empty list
 }
