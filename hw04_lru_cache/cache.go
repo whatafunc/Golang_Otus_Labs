@@ -82,8 +82,8 @@ func (l *lruCache) Set(key Key, value interface{}) bool {
 
 // Get implements Cache.
 func (l *lruCache) Get(key Key) (interface{}, bool) {
-	l.mu.RLock()         // Read lock now
-	defer l.mu.RUnlock() // Unlock after this method gets finished
+	l.mu.Lock()         // Read lock now
+	defer l.mu.Unlock() // Unlock after this method gets finished
 	wasInCache := false
 	var nodeValue interface{}
 	if node, found := l.items[key]; found { // если элемент присутствует в словаре,
