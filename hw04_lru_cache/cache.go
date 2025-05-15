@@ -41,7 +41,7 @@ func (l *lruCache) Set(key Key, value interface{}) bool {
 		l.PrintCache()
 		fmt.Println("LRU queue = ", l.queue)
 	}
-	l.mu.Lock()         // Lock for write
+	l.mu.Lock()         // Full Lock for write/read as per the fix to Move operation
 	defer l.mu.Unlock() // Unlock when done
 	wasInCache := false
 
