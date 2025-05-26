@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -13,7 +14,11 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	defer goleak.VerifyNone(t)
+	if os.Getenv("DISABLE_GOLEAK") == "" {
+		defer goleak.VerifyNone(t)
+	} else {
+		fmt.Println("⚠️ goleak disabled for profiling run")
+	}
 	if Debug {
 		fmt.Println("\033[H\033[2J")
 	}
