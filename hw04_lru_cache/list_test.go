@@ -2,7 +2,6 @@ package hw04lrucache
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -67,31 +66,5 @@ func TestList(t *testing.T) {
 			elems = append(elems, i.Value.(int))
 		}
 		require.Equal(t, []int{70, 80, 60, 40, 10, 30, 50}, elems)
-	})
-}
-
-func TestListConcurently(t *testing.T) {
-	t.Run("concurrent Access to List", func(t *testing.T) {
-		l := NewList()
-		var items []*ListItem
-
-		// Fill list
-		for i := 0; i < 100; i++ {
-			item := l.PushBack(i)
-			items = append(items, item)
-		}
-
-		var wg sync.WaitGroup
-		for i := 0; i < 100; i++ {
-			wg.Add(1)
-			go func(idx int) {
-				defer wg.Done()
-				require.NotPanics(t, func() { // catch no panic or race condition
-					l.MoveToFront(items[idx])
-				})
-			}(i)
-		}
-
-		wg.Wait()
 	})
 }

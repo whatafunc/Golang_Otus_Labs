@@ -1,7 +1,5 @@
 package hw04lrucache
 
-import "sync"
-
 const Debug = false // mode => go test -run '^TestList$'
 type List interface {
 	Len() int
@@ -23,7 +21,6 @@ type list struct { // Doubly Linked List (Primary for list operations).
 	head *ListItem
 	tail *ListItem
 	len  int
-	mu   sync.RWMutex // added to work in concurrent mode
 }
 
 func NewList() List {
@@ -31,30 +28,18 @@ func NewList() List {
 }
 
 func (l *list) Len() int {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-
 	return l.len
 }
 
 func (l *list) Front() *ListItem {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-
 	return l.head
 }
 
 func (l *list) Back() *ListItem {
-	l.mu.RLock()
-	defer l.mu.RUnlock()
-
 	return l.tail
 }
 
 func (l *list) PushFront(v interface{}) *ListItem {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	newItem := &ListItem{
 		Value: v,
 		Next:  l.head, // point forward to the old head
@@ -73,9 +58,6 @@ func (l *list) PushFront(v interface{}) *ListItem {
 }
 
 func (l *list) PushBack(v interface{}) *ListItem {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	newItem := &ListItem{
 		Value: v,
 		Prev:  l.tail, // point backward to the old head
@@ -93,9 +75,6 @@ func (l *list) PushBack(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(i *ListItem) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	if i == nil {
 		return
 	}
@@ -122,20 +101,11 @@ func (l *list) Remove(i *ListItem) {
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
 	if i == nil || l.head == i {
 		return
 	}
 
-	// Unlink i from current position
-	// if i.Prev != nil { // начальный существует для всех тк если начальный является стартовым то это отсечено выше уже
 	i.Prev.Next = i.Next
-	//}
-	// if i.Next != nil { // последний существует всегда
-	//	i.Next.Prev = i.Prev
-	//}
 
 	// If i was tail, update tail
 	if l.tail == i {
@@ -145,9 +115,7 @@ func (l *list) MoveToFront(i *ListItem) {
 	// Insert i at front
 	i.Prev = nil
 	i.Next = l.head
-	// if l.head != nil { // первый же есть всегда
 	l.head.Prev = i
-	//}
 	l.head = i
 
 	// If the list was empty (unlikely here), set tail too
