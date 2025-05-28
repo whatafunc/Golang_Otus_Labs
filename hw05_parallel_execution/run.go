@@ -75,29 +75,14 @@ func Run(tasks []Task, n, m int) error {
 		case <-stopChan: // If stopCnan is closed (read error on attempt to read from stopChan) then it's "the signal":
 			// Error threshold reached, stop sending tasks
 			_ = taskIndex
-			/*if Debug {
-				fmt.Println("[Sender] Stop signal received on iteration ", taskIndex, ", ending task dispatch")
-			}*/
 		case taskChan <- task: // Task sent to workers OK
 			atomic.AddInt64(&dispatchedTasks, 1)
-			/*if Debug {
-				fmt.Println("[Sender] Task #", taskIndex, " sent to channel")
-			}*/
 		}
 	}
 
 	close(taskChan) // All tasks sent — close the channel
-	/*if Debug {
-		fmt.Println("[Sender] All tasks sent, taskChan closed")
-		fmt.Println("........................................")
-	}*/
 
 	wg.Wait() // Wait for all workers to finish
-
-	/*if Debug {
-		fmt.Println("........................................")
-		fmt.Println("err counter = ", atomic.LoadInt64(&errCounter))
-	}*/
 
 	if errCounter > maxErrors { // Return error if the errors limit was reached
 		return ErrErrorsLimitExceeded
