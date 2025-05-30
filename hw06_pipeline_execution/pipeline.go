@@ -22,23 +22,30 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	return current
 }
 
-func wrapStageWithCancel(stage Stage, done In, current In) Out {
+func wrapStageWithCancel(stage Stage, done In, in In) Out {
 	out := make(Bi)
-
 	go func() {
 		defer close(out)
-		stageOut := stage(current)
+		stageOut := stage(in)
 
 		for {
 			select {
-			case <-done: // check before starting to process the next value (func)
+			case <-done:
+				// Drain the input channel to unblock the stage goroutine
+				go func() {
+					for i := range stageOut {
+						// fmt.Println("drain out: ", i)
+						_ = i // fight with linter
+					}
+				}()
 				return
 			case v, ok := <-stageOut:
 				if !ok {
 					return
 				}
+				// time.Sleep(111)
 				select {
-				case <-done: // check again but before sending a value to the next stage
+				case <-done:
 					return
 				case out <- v:
 				}
