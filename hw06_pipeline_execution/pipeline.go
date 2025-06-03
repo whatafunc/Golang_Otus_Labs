@@ -22,6 +22,15 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	return current
 }
 
+// drain starts a goroutine that simply drains and discards all values from `in`.
+func drain(in In) {
+	go func() {
+		for v := range in {
+			_ = v
+		}
+	}()
+}
+
 func wrapStageWithCancel(stage Stage, done In, in In) Out {
 	out := make(Bi)
 	go func() {
@@ -31,23 +40,17 @@ func wrapStageWithCancel(stage Stage, done In, in In) Out {
 		for {
 			select {
 			case <-done:
-				// Drain the input channel to unblock the stage goroutine
-				go func() {
-					for i := range stageOut {
-						// fmt.Println("drain out: ", i)
-						_ = i // fight with linter
-					}
-				}()
+				drain(stageOut) // empty the unused values on `Stop`` signal
 				return
-			case v, ok := <-stageOut:
+			case val, ok := <-stageOut:
 				if !ok {
 					return
 				}
-				// time.Sleep(111)
 				select {
 				case <-done:
+					drain(stageOut) // empty the unused values on `Stop`` signal
 					return
-				case out <- v:
+				case out <- val:
 				}
 			}
 		}
