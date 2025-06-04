@@ -150,8 +150,8 @@ func TestAllStageStop(t *testing.T) {
 	t.Run("done BIG case", func(t *testing.T) {
 		in := make(Bi)
 		done := make(Bi)
-		data := make([]int, 0, 100)
-		for i := 0; i < 100; i++ {
+		data := make([]int, 0, 1000)
+		for i := 0; i < 1000; i++ {
 			data = append(data, i)
 		}
 

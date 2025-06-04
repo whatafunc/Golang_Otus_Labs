@@ -16,31 +16,51 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 	current := in // Connect stages in a pipeline
 
 	for _, stage := range stages {
-		// Wrap each stage with cancellation support
+		// Wrap each stage with cancellation support & chan of `data` numbers
 		current = wrapStageWithCancel(stage, done, current)
 	}
 	return current
 }
 
-// drain starts a goroutine that simply drains and discards all values from `in`.
+// drains and discards all values from `in`.
 func drain(in In) {
-	go func() {
-		for v := range in {
-			_ = v
-		}
-	}()
+	for val := range in {
+		_ = val // to comply with the linter
+	}
 }
 
 func wrapStageWithCancel(stage Stage, done In, in In) Out {
-	out := make(Bi)
-	go func() {
-		defer close(out)
-		stageOut := stage(in)
+	filteredIn := make(Bi)
 
+	// Filter `in` with respect to `done`
+	go func() {
+		defer close(filteredIn)
 		for {
 			select {
 			case <-done:
-				drain(stageOut) // empty the unused values on `Stop`` signal
+				return
+			case val, ok := <-in:
+				if !ok {
+					return
+				}
+				select {
+				case <-done:
+					return
+				case filteredIn <- val:
+				}
+			}
+		}
+	}()
+
+	stageOut := stage(filteredIn)
+
+	out := make(Bi) // Process a stage unless it completed or cancelled
+	go func() {
+		defer close(out)
+		defer drain(stageOut)
+		for {
+			select {
+			case <-done:
 				return
 			case val, ok := <-stageOut:
 				if !ok {
@@ -48,12 +68,12 @@ func wrapStageWithCancel(stage Stage, done In, in In) Out {
 				}
 				select {
 				case <-done:
-					drain(stageOut) // empty the unused values on `Stop`` signal
 					return
 				case out <- val:
 				}
 			}
 		}
 	}()
+
 	return out
 }
