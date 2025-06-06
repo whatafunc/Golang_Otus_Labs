@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -68,4 +69,36 @@ func TestCopy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSpecialFiles(t *testing.T) {
+	t.Run("Should reject device files", func(t *testing.T) {
+		err := Copy("/dev/urandom", "output.dat", 0, 0)
+		if err == nil {
+			t.Error("Expected error for device file")
+		}
+	})
+}
+
+func TestSameFileDetection(t *testing.T) {
+	tmpFile := filepath.Join(t.TempDir(), "test.txt")
+	os.WriteFile(tmpFile, []byte("test"), 0o644)
+	defer os.Remove(tmpFile)
+
+	t.Run("Identical paths", func(t *testing.T) {
+		err := Copy(tmpFile, tmpFile, 0, 0)
+		if err == nil || !strings.Contains(err.Error(), "destination file is same as source file") {
+			t.Errorf("Should reject identical paths")
+		}
+	})
+
+	t.Run("Hard links", func(t *testing.T) {
+		linkPath := filepath.Join(t.TempDir(), "link.txt")
+		os.Link(tmpFile, linkPath) // Create hard link
+		defer os.Remove(linkPath)
+		err := Copy(tmpFile, linkPath, 0, 0)
+		if err == nil || !strings.Contains(err.Error(), "destination file is symlinked to source file") {
+			t.Errorf("Should detect hard links as same file")
+		}
+	})
 }

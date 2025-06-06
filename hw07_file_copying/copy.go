@@ -31,6 +31,54 @@ func Copy(from, to string, offset, limit int64) error {
 	}
 	fileSize := fileInfo.Size()
 
+	if fileInfo.Mode().IsDir() {
+		return errors.New("cannot copy directories")
+	}
+
+	if fileInfo.Mode().Perm()&0o400 == 0 {
+		return errors.New("source file not readable")
+	}
+
+	if fileInfo.Mode()&os.ModeDevice != 0 { // check for os device /dev/urandom, /dev/null, etc.
+		return fmt.Errorf("cannot copy device files: %s", from)
+	}
+
+	// check files identical
+	if from == to {
+		return fmt.Errorf("destination file is same as source file: %s", to)
+	}
+
+	// validate output dest file against the from file
+	if fi, err := os.Stat(to); err == nil {
+		if fi.Mode()&os.ModeDevice != 0 {
+			return fmt.Errorf("output path is a device file: %s", to)
+		}
+		if fi.Mode()&os.ModeNamedPipe != 0 {
+			return fmt.Errorf("output path is a named pipe: %s", to)
+		}
+		if fi.IsDir() {
+			return fmt.Errorf("output path is a directory: %s", to)
+		}
+
+		if os.SameFile(fileInfo, fi) { // where: fileinfo is the source, fi - dest files
+			return fmt.Errorf("destination file is symlinked to source file: %s", to)
+		}
+	}
+
+	// Resolve symlinks and get absolute paths - redundant as SameFile introduced covers this earlier!
+	// abs1, err := filepath.Abs(from)
+	// if err != nil {
+	// 	return fmt.Errorf("cannot check symlink of src file: %w", err)
+	// }
+	// abs2, err := filepath.Abs(to)
+	// if err != nil {
+	// 	return fmt.Errorf("cannot check symlink of dest file: %w", err)
+	// }
+
+	// if abs1 == abs2 {
+	// 	return fmt.Errorf("destination file is same as source file: %s", to)
+	// }
+
 	// Validate offset BEFORE any operations
 	if offset > fileSize {
 		return ErrOffsetExceedsFileSize // Fail fast
