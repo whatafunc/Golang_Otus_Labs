@@ -13,9 +13,8 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 		return in
 	}
 
-	current := in // Connect stages in a pipeline
-	current = makeCancellableStage(done, current)
-	for _, stage := range stages {
+	current := makeCancellableStage(done, in) // send input with checking cancellation in advance
+	for _, stage := range stages {            // Connect stages in a pipeline
 		// make stage with cancellation support & chan of `data` numbers
 		current = makeCancellableStage(done, stage(current))
 	}
