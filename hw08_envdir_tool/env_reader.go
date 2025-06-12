@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	"bufio"
 	"log"
 	"os"
 	"path/filepath"
@@ -23,10 +23,6 @@ type EnvValue struct {
 // Variables represented as files where filename is name of variable, file first line is a value.
 // Returns (Environment, nil) on success or (nil, error) on failure.
 func ReadDir(dir string) (Environment, error) {
-	// Initialize Viper (but skip auto-parsing) with //"github.com/spf13/viper"
-	// v := viper.New()
-	// v.SetConfigType("env")
-
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -48,57 +44,58 @@ func ReadDir(dir string) (Environment, error) {
 
 		// Read the first line of the file
 		filePath := filepath.Join(dir, fileName)
-		content, err := os.ReadFile(filePath)
+		firstLine, isEmpty, err := readFirstLineOnly(filePath)
 		if err != nil {
-			log.Printf("Error reading %s: %v", fileName, err)
 			return nil, err
 		}
 
-		value := strings.TrimSpace(readFirstLine(content))
-		needRemove := false
-		if len(value) == 0 {
-			needRemove = true // Empty file case
-		} else {
-			value = strings.TrimRight(value, " \t\r") // Normal case - take first line
-			if value == "" {
-				needRemove = true
-			}
-		}
-
 		env[fileName] = EnvValue{
-			Value:      value,
-			NeedRemove: needRemove,
+			Value:      firstLine,
+			NeedRemove: isEmpty || firstLine == "",
 		}
-
-		// Set the VARIABLE (filename) -> VALUE in Viper
-		// v.Set(file.Name(), value) // Filename = Key, First line = Value
 
 		// Apply to environment
 		os.Unsetenv(fileName) // Remove existing if any
-		os.Setenv(fileName, value)
+		os.Setenv(fileName, firstLine)
 	}
-
 	return env, nil
 }
 
-func readFirstLine(content []byte) string {
-	// Replace null bytes with newlines as per spec
-	content = bytes.ReplaceAll(content, []byte{0x00}, []byte{'\n'})
+// Reads just the first line efficiently.
+func readFirstLineOnly(path string) (string, bool, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", false, err
+	}
+	defer file.Close()
 
-	// Find first newline
-	end := bytes.IndexByte(content, '\n')
-	if end == -1 {
-		end = len(content)
+	scanner := bufio.NewScanner(file)
+	if !scanner.Scan() {
+		// File is completely empty
+		return "", true, nil
 	}
 
-	content = content[:end]
-	normalized := string(content)
-	// Normalize all line endings to `\n` first
-	// normalized := strings.ReplaceAll(string(content), "\r\n", "\n") // Windows
-	// normalized = strings.ReplaceAll(normalized, "\r", "\n")         // Old Mac
-	// normalized = strings.TrimRight(normalized, " \t")               // following Task Spec
+	line := scanner.Text()
 
-	// fmt.Println(" ----------", normalized, "--------- ")
-	// Now split and take the first line
-	return strings.Split(normalized, "\n")[0]
+	// Special case: file contains only whitespace
+	if strings.TrimSpace(line) == "" && isFileOnlyWhitespace(path) {
+		return "", true, nil
+	}
+
+	line = strings.ReplaceAll(line, "\x00", "\n")
+	return strings.TrimRight(line, " \t"), false, nil
+}
+
+// Helper to check if file contains only whitespace.
+func isFileOnlyWhitespace(path string) bool {
+	file, _ := os.Open(path)
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		if strings.TrimSpace(scanner.Text()) != "" {
+			return false
+		}
+	}
+	return true
 }

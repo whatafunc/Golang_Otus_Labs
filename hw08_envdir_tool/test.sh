@@ -12,7 +12,8 @@ export EMPTY="SHOULD_BE_EMPTY"
 result=$(./go-envdir "$(pwd)/testdata/env" "/bin/bash" "$(pwd)/testdata/echo.sh" arg1=1 arg2=2)
 expected='HELLO is ("hello")
 BAR is (bar)
-FOO is (foo)
+FOO is (   foo
+with new line)
 UNSET is ()
 ADDED is (from original env)
 EMPTY is ()

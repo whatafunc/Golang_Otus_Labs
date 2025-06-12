@@ -19,7 +19,4 @@ func TestRunCmd(t *testing.T) {
 	exitCode := RunCmd(cmd, env)
 
 	assert.Equal(t, 0, exitCode)
-	// Output should contain both:
-	// "from original env" (preserved)
-	// "bar" (from envdir)
 }

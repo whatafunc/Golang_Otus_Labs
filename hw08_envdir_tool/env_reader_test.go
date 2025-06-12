@@ -14,10 +14,8 @@ func TestReadDir(t *testing.T) {
 	t.Run("InvalidDir", func(t *testing.T) {
 		res, err := ReadDir(dir + "no-folder")
 		assert.Assert(t, cmp.Nil(res)) // Check res is nil
-
 		// Check error is os.ErrNotExist
 		assert.Assert(t, cmp.ErrorIs(err, os.ErrNotExist))
-
 		// Double check: Check error contains a substring
 		assert.ErrorContains(t, err, "no such file or directory")
 	})
@@ -38,14 +36,11 @@ func TestReadDir(t *testing.T) {
 			// TO-DO: add other Golden files...
 		}
 		assert.DeepEqual(t, res["BAR"], EnvValue{Value: "bar", NeedRemove: false})
-
 		for key, expected := range expectedValues {
 			actual, exists := res[key]
 			assert.Assert(t, exists, "key %s not found", key)
 			assert.DeepEqual(t, actual, expected)
 		}
-		// log.Println("------ dir is OK")
-		// log.Println("-struct = ", res)
 	})
 	t.Run("ValidEnvVars", func(t *testing.T) {
 		_, err := ReadDir(dir)
@@ -55,9 +50,5 @@ func TestReadDir(t *testing.T) {
 		// Assert environment changes
 		assert.Equal(t, "", os.Getenv("EMPTY")) // Should be unset
 		assert.Equal(t, "bar", os.Getenv("BAR"))
-		// assert.Equal(t, "a\nb", os.Getenv("NULLTEST"))
-		// assert.Equal(t, "value", os.Getenv("SPACES"))
-		// log.Println("------ dir is OK")
-		// log.Println("-struct = ", res)
 	})
 }
