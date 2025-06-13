@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -78,7 +79,7 @@ func readFirstLineOnly(path string) (string, bool, error) {
 	line := scanner.Text()
 
 	// Special case: file contains only whitespace
-	if strings.TrimSpace(line) == "" && isFileOnlyWhitespace(path) {
+	if strings.TrimSpace(line) == "" && isFileOnlyWhitespace(file) {
 		return "", true, nil
 	}
 
@@ -87,12 +88,9 @@ func readFirstLineOnly(path string) (string, bool, error) {
 }
 
 // Helper to check if file contains only whitespace.
-func isFileOnlyWhitespace(path string) bool {
-	file, _ := os.Open(path)
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
+func isFileOnlyWhitespace(file io.Reader) bool {
+	scanner := bufio.NewScanner(file) // reads from a file line by line.
+	for scanner.Scan() {              // iterates over each line.
 		if strings.TrimSpace(scanner.Text()) != "" {
 			return false
 		}
