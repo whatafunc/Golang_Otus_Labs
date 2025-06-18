@@ -31,7 +31,7 @@ func TestReadDir(t *testing.T) {
 			},
 			"EMPTY": {
 				Value:      "",
-				NeedRemove: true, // Assuming empty file or empty first line
+				NeedRemove: false, // Assuming empty first line
 			},
 			// TO-DO: add other Golden files...
 		}
