@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -13,8 +14,14 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	defer goleak.VerifyNone(t)
-
+	if os.Getenv("DISABLE_GOLEAK") == "" {
+		defer goleak.VerifyNone(t)
+	} else {
+		fmt.Println("⚠️ goleak disabled for profiling run")
+	}
+	if Debug {
+		fmt.Println("\033[H\033[2J")
+	}
 	t.Run("if were errors in first M tasks, than finished not more N+M tasks", func(t *testing.T) {
 		tasksCount := 50
 		tasks := make([]Task, 0, tasksCount)
@@ -66,5 +73,26 @@ func TestRun(t *testing.T) {
 
 		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
 		require.LessOrEqual(t, int64(elapsedTime), int64(sumTime/2), "tasks were run sequentially?")
+	})
+
+	t.Run("if were errors in first M tasks, than finished not more 1 tasks", func(t *testing.T) {
+		tasksCount := 50
+		tasks := make([]Task, 0, tasksCount)
+
+		var runTasksCount int32
+
+		for i := 0; i < tasksCount; i++ {
+			err := fmt.Errorf("sample error from task %d", i)
+			tasks = append(tasks, func() error {
+				time.Sleep(time.Millisecond * time.Duration(rand.Intn(100)))
+				atomic.AddInt32(&runTasksCount, 1)
+				return err
+			})
+		}
+
+		workersCount := 10
+		maxErrorsCount := -1 // fire stop all workers on any error
+		err := Run(tasks, workersCount, maxErrorsCount)
+		require.Error(t, err)
 	})
 }
