@@ -44,7 +44,7 @@ func ReadDir(dir string) (Environment, error) {
 
 		// Read the first line of the file
 		filePath := filepath.Join(dir, fileName)
-		firstLine, isEmpty, err := readFirstLineOnly(filePath)
+		firstLine, isEmpty, err := readFirstLine(filePath)
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +62,7 @@ func ReadDir(dir string) (Environment, error) {
 }
 
 // Reads just the first line efficiently.
-func readFirstLineOnly(path string) (string, bool, error) {
+func readFirstLine(path string) (string, bool, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return "", false, err
