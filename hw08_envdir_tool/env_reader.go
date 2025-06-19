@@ -76,10 +76,6 @@ func readFirstLineOnly(path string) (string, bool, error) {
 	}
 
 	line := scanner.Text()
-	if strings.TrimSpace(line) == "" { // first line contains only whitespace.
-		return "", false, nil
-	}
-
 	line = strings.ReplaceAll(line, "\x00", "\n")
 	return strings.TrimRight(line, " \t"), false, nil
 }
