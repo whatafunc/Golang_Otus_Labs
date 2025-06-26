@@ -68,6 +68,15 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
+		// Token struct (no validation tags)
+		{
+			in: &Token{
+				Header:    []byte("header"),
+				Payload:   []byte("payload"),
+				Signature: []byte("signature"),
+			},
+			expectedErr: nil,
+		},
 	}
 
 	for i, tt := range tests {
@@ -182,15 +191,6 @@ func TestInvalidate(t *testing.T) {
 				Body: "Created",
 			},
 			expectedErr: fmt.Errorf("validation error"),
-		},
-		// Token struct (no validation tags)
-		{
-			in: &Token{
-				Header:    []byte("header"),
-				Payload:   []byte("payload"),
-				Signature: []byte("signature"),
-			},
-			expectedErr: nil,
 		},
 		// Non-struct type (int)
 		{
