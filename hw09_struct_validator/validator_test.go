@@ -53,6 +53,49 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
+		// Valid App
+		{
+			in: &App{
+				Version: "1.3.5",
+			},
+			expectedErr: nil,
+		},
+		// Valid Response
+		{
+			in: &Response{
+				Code: 200,
+				Body: "OK",
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			tt := tt
+			t.Parallel()
+			testResults := Validate(tt.in)
+			if (tt.expectedErr != nil && testResults == nil) || (tt.expectedErr == nil && testResults != nil) {
+				t.Errorf("expected error: %v, got: %v", tt.expectedErr, testResults)
+			} else {
+				fmt.Println("----VALIDATION TESTS PASSED-----")
+				if testResults != nil {
+					// Safe to call Error() since testResults is not nil
+					fmt.Println("Validation caught correct assumptions aka errors:\n", testResults.Error())
+				} else {
+					fmt.Println("Validation passed with no errors")
+				}
+			}
+			_ = tt
+		})
+	}
+}
+
+func TestInvalidate(t *testing.T) {
+	tests := []struct {
+		in          interface{}
+		expectedErr error
+	}{
 		// Invalid User: ID too short
 		{
 			in: &User{
@@ -125,27 +168,12 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("validation error"),
 		},
-		// Valid App
-		{
-			in: &App{
-				Version: "1.3.5",
-			},
-			expectedErr: nil,
-		},
 		// Invalid App: Version too short
 		{
 			in: &App{
 				Version: "1.0",
 			},
 			expectedErr: fmt.Errorf("validation error"),
-		},
-		// Valid Response
-		{
-			in: &Response{
-				Code: 200,
-				Body: "OK",
-			},
-			expectedErr: nil,
 		},
 		// Invalid Response: Code not allowed
 		{
@@ -184,12 +212,12 @@ func TestValidate(t *testing.T) {
 			if (tt.expectedErr != nil && testResults == nil) || (tt.expectedErr == nil && testResults != nil) {
 				t.Errorf("expected error: %v, got: %v", tt.expectedErr, testResults)
 			} else {
-				fmt.Println("----TESTS PASSED-----")
+				fmt.Println("----INVALIDATION TESTS PASSED-----")
 				if testResults != nil {
 					// Safe to call Error() since testResults is not nil
-					fmt.Println("Validation caught correct assumptions aka errors:\n", testResults.Error())
+					fmt.Println("Invalidation caught correct assumptions aka errors:\n", testResults.Error())
 				} else {
-					fmt.Println("Validation passed with no errors")
+					fmt.Println("Invalidation passed with no errors")
 				}
 			}
 			_ = tt
