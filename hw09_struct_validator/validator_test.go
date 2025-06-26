@@ -129,7 +129,7 @@ func TestInvalidate(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("validation error"),
 		},
-		// Invalid User: wrong phone
+		// Invalid User: wrong phone!
 		{
 			in: &User{
 				ID:     "12345678-1234-1234-1234-123456789012",
