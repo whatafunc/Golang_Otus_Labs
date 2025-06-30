@@ -1,0 +1,34 @@
+module github.com/whatafunc/Golang_Otus_Labs/hw09_struct_validator
+git checkout master
+git checkout -b hw09_struct_validator или git checkout hw09_struct_validator если уже имеется
+
+/Users/mdx/go/bin/golangci-lint run .
+git add .
+git commit -am "feat: HW09 start with implementation for len, ID validations of a struct"
+git push origin hw09_struct_validator
+
+
+https://github.com/whatafunc/Golang_Otus_Labs/compare/hw09_struct_validator?expand=1&template=hw09_struct_validator.md
+
+
+
+go test -json ./... | tparse1
+╭────────┬──────────┬─────────────────────────────────────────────────────────────┬───────┬──────┬──────┬──────╮
+│ Status │ Elapsed  │                           Package                           │ Cover │ Pass │ Fail │ Skip │
+├────────┼──────────┼─────────────────────────────────────────────────────────────┼───────┼──────┼──────┼──────┤
+│  PASS  │ (cached) │ github.com/whatafunc/Golang_Otus_Labs/hw09_struct_validator │  --   │  20  │  0   │  0   │
+╰────────┴──────────┴─────────────────────────────────────────────────────────────┴───────┴──────┴──────┴──────╯
+
+go test -cover -json ./... | tparse1
+╭────────┬─────────┬─────────────────────────────────────────────────────────────┬───────┬──────┬──────┬──────╮
+│ Status │ Elapsed │                           Package                           │ Cover │ Pass │ Fail │ Skip │
+├────────┼─────────┼─────────────────────────────────────────────────────────────┼───────┼──────┼──────┼──────┤
+│  PASS  │  0.47s  │ github.com/whatafunc/Golang_Otus_Labs/hw09_struct_validator │ 91.0% │  20  │  0   │  0   │
+
+
+go test -cover -coverprofile=coverage.out
+PASS
+coverage: 91.0% of statements
+ok      github.com/whatafunc/Golang_Otus_Labs/hw09_struct_validator     0.566s
+go tool cover -html=coverage.out
+ 

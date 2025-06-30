@@ -34,6 +34,137 @@ type (
 		Code int    `validate:"in:200,404,500"`
 		Body string `json:"omitempty"`
 	}
+
+	Family struct {
+		ChildrenAges  []int    `validate:"min:0|max:18"`
+		ParentsStatus []string `validate:"regexp:^(Mr\.|Mrs\.)\s+[A-Za-z]+$"` //nolint
+		Country       []string `validate:"in:Spain,UAE,GB"`
+	}
+
+	FamilyWithWrongStatusDetect struct {
+		ChildrenAges []int `validate:"min:0|max:18"`
+		//nolint:structcheck
+		ParentsStatus []string `validate:"regexp:^(YYY\\.|XXX\\.)\\s+[A-Za-z]+("`
+	}
+
+	Scores struct {
+		Values []int `validate:"in:1,2,3,10,23"`
+	}
+)
+
+var (
+	// Reusable test fixtures.
+	validUser = &User{
+		ID:     "12345678-1234-1234-1234-123456789012",
+		Name:   "Alice",
+		Age:    30,
+		Email:  "alice@mail.com",
+		Role:   "admin",
+		Phones: []string{"12345678901", "10987654321"},
+	}
+
+	validFamily = &Family{
+		ChildrenAges:  []int{5, 18},
+		ParentsStatus: []string{"Mrs. Bulkina", "Mr. Ivanov"},
+	}
+
+	validApp = &App{
+		Version: "1.3.5",
+	}
+
+	validResponse = &Response{
+		Code: 200,
+		Body: "OK",
+	}
+
+	tokenNoTags = &Token{
+		Header:    []byte("header"),
+		Payload:   []byte("payload"),
+		Signature: []byte("signature"),
+	}
+
+	validScores = &Scores{
+		Values: []int{1, 2, 3},
+	}
+
+	// Reusable invalid test fixtures.
+	invalidUserIDTooShort = &User{
+		ID:     "12345678-1",
+		Name:   "Vasya",
+		Age:    45,
+		Email:  "Vasya@mail.com",
+		Role:   "admin",
+		Phones: []string{"12345678901"},
+	}
+
+	invalidOldFamily = &Family{
+		ChildrenAges:  []int{-1, 31},
+		ParentsStatus: []string{"Cheburashka", "DOOM III", "Go Professional"},
+		Country:       []string{"Sputnik", "Mars"},
+	}
+
+	invalidFamilyWithWrongStatus = &FamilyWithWrongStatusDetect{
+		ChildrenAges:  []int{5, 10},
+		ParentsStatus: []string{"Mrs. Bulkina", "Mr. Ivanov"},
+	}
+
+	invalidUserAgeTooLow = &User{
+		ID:     "12345678-1234-1234-1234-123456789012",
+		Name:   "Carol",
+		Age:    15,
+		Email:  "carol@mail.com",
+		Role:   "admin",
+		Phones: []string{"12345678901"},
+	}
+
+	invalidUserWrongPhone = &User{
+		ID:     "12345678-1234-1234-1234-123456789012",
+		Name:   "Caroline",
+		Age:    31,
+		Email:  "caroline@mail.com",
+		Role:   "stuff",
+		Phones: []string{"02", "112"},
+	}
+
+	invalidUserEmailInvalid = &User{
+		ID:     "12345678-1234-1234-1234-123456789012",
+		Name:   "Dave",
+		Age:    32,
+		Email:  "not-an-email",
+		Role:   "admin",
+		Phones: []string{"12345678901"},
+	}
+
+	invalidUserRoleNotAllowed = &User{
+		ID:     "12345678-1234-1234-1234-123456789012",
+		Name:   "Eve",
+		Age:    30,
+		Email:  "eve@mail.com",
+		Role:   "user",
+		Phones: []string{"12345678901"},
+	}
+
+	invalidUserAllWrongFields = &User{
+		ID:     "12",
+		Name:   "",
+		Age:    310,
+		Email:  "eve!mail.com",
+		Role:   "abuser",
+		Phones: []string{""},
+	}
+
+	invalidAppVersionTooShort = &App{
+		Version: "1.0",
+	}
+
+	invalidResponseCodeNotAllowed = &Response{
+		Code: 9999,
+		Body: "Created",
+	}
+
+	invalidScoresDisallowedValues = &Scores{
+		Values: []int{1, 55555, 3000},
+	}
 )
 
 func isValidationErrors(err error) bool {
@@ -53,47 +184,32 @@ func TestValidate(t *testing.T) {
 		expectValid bool // true if expect no validation errors
 		expectDev   bool // true if expect developer error
 	}{
-		// Valid User
 		{
-			name: "Valid User",
-			in: &User{
-				ID:     "12345678-1234-1234-1234-123456789012",
-				Name:   "Alice",
-				Age:    30,
-				Email:  "alice@mail.com",
-				Role:   "admin",
-				Phones: []string{"12345678901", "10987654321"},
-			},
+			name:        "Valid User",
+			in:          validUser,
 			expectValid: true,
 		},
-		// Valid App
 		{
-			name: "Valid App",
-			in: &App{
-				Version: "1.3.5",
-			},
+			name:        "Still a valid Family struct use",
+			in:          validFamily,
 			expectValid: true,
 		},
-		// Valid Response
 		{
-			name: "Valid Response",
-			in: &Response{
-				Code: 200,
-				Body: "OK",
-			},
+			name:        "Valid App",
+			in:          validApp,
 			expectValid: true,
 		},
-		// Token struct (no validation tags)
 		{
-			name: "Token no tags",
-			in: &Token{
-				Header:    []byte("header"),
-				Payload:   []byte("payload"),
-				Signature: []byte("signature"),
-			},
+			name:        "Valid Response",
+			in:          validResponse,
 			expectValid: true,
 		},
-		// Developer error: invalid tag param (len:xvii)
+		{
+			name:        "Token no tags",
+			in:          tokenNoTags,
+			expectValid: true,
+		},
+		// Developer error cases
 		{
 			name: "Developer error invalid len param",
 			in: struct {
@@ -103,7 +219,6 @@ func TestValidate(t *testing.T) {
 			},
 			expectDev: true,
 		},
-		// Developer error: regex on int
 		{
 			name: "Developer error regex on int",
 			in: struct {
@@ -113,7 +228,6 @@ func TestValidate(t *testing.T) {
 			},
 			expectDev: true,
 		},
-		// Developer error: unknown rule
 		{
 			name: "Developer error unknown rule",
 			in: struct {
@@ -123,7 +237,6 @@ func TestValidate(t *testing.T) {
 			},
 			expectDev: true,
 		},
-		// Developer error: invalid in param
 		{
 			name: "Developer error invalid in param",
 			in: struct {
@@ -133,7 +246,6 @@ func TestValidate(t *testing.T) {
 			},
 			expectDev: true,
 		},
-		// Developer error: passing non-struct
 		{
 			name:      "Developer error non-struct int",
 			in:        42,
@@ -143,6 +255,11 @@ func TestValidate(t *testing.T) {
 			name:      "Developer error non-struct string",
 			in:        "not a struct",
 			expectDev: true,
+		},
+		{
+			name:        "Valid Scores slice",
+			in:          validScores,
+			expectValid: true,
 		},
 	}
 
@@ -169,7 +286,6 @@ func TestValidate(t *testing.T) {
 				return
 			}
 
-			// For other cases (invalid user input), expect ValidationErrors
 			if err == nil {
 				t.Errorf("expected validation errors, got nil")
 				return
@@ -190,92 +306,61 @@ func TestInvalidate(t *testing.T) {
 		expectDev   bool
 		expectValid bool
 	}{
-		// Invalid User: ID too short
 		{
-			name: "Invalid User ID too short",
-			in: &User{
-				ID:     "12345678-1",
-				Name:   "Vasya",
-				Age:    45,
-				Email:  "Vasya@mail.com",
-				Role:   "admin",
-				Phones: []string{"12345678901"},
-			},
+			name:        "Invalid User ID too short",
+			in:          invalidUserIDTooShort,
+			expectValid: false,
 		},
-		// Invalid User: Age too low
 		{
-			name: "Invalid User Age too low",
-			in: &User{
-				ID:     "12345678-1234-1234-1234-123456789012",
-				Name:   "Carol",
-				Age:    15,
-				Email:  "carol@mail.com",
-				Role:   "admin",
-				Phones: []string{"12345678901"},
-			},
+			name:        "Old family, incorrect parents, not applicable country",
+			in:          invalidOldFamily,
+			expectValid: false,
 		},
-		// Invalid User: wrong phone!
 		{
-			name: "Invalid User wrong phone",
-			in: &User{
-				ID:     "12345678-1234-1234-1234-123456789012",
-				Name:   "Caroline",
-				Age:    31,
-				Email:  "caroline@mail.com",
-				Role:   "stuff",
-				Phones: []string{"02", "112"},
-			},
+			name:        "Not OK family",
+			in:          invalidFamilyWithWrongStatus,
+			expectValid: false,
+			expectDev:   true,
 		},
-		// Invalid User: Email invalid
 		{
-			name: "Invalid User Email invalid",
-			in: &User{
-				ID:     "12345678-1234-1234-1234-123456789012",
-				Name:   "Dave",
-				Age:    32,
-				Email:  "not-an-email",
-				Role:   "admin",
-				Phones: []string{"12345678901"},
-			},
+			name:        "Invalid User Age too low",
+			in:          invalidUserAgeTooLow,
+			expectValid: false,
 		},
-		// Invalid User: Role not allowed
 		{
-			name: "Invalid User Role not allowed",
-			in: &User{
-				ID:     "12345678-1234-1234-1234-123456789012",
-				Name:   "Eve",
-				Age:    30,
-				Email:  "eve@mail.com",
-				Role:   "user",
-				Phones: []string{"12345678901"},
-			},
+			name:        "Invalid User wrong phone",
+			in:          invalidUserWrongPhone,
+			expectValid: false,
 		},
-		// Invalid User: all wrong fields
 		{
-			name: "Invalid User all wrong fields",
-			in: &User{
-				ID:     "12",
-				Name:   "",
-				Age:    310,
-				Email:  "eve!mail.com",
-				Role:   "abuser",
-				Phones: []string{""},
-			},
+			name:        "Invalid User Email invalid",
+			in:          invalidUserEmailInvalid,
+			expectValid: false,
 		},
-		// Invalid App: Version too short
 		{
-			name: "Invalid App Version too short",
-			in: &App{
-				Version: "1.0",
-			},
+			name:        "Invalid User Role not allowed",
+			in:          invalidUserRoleNotAllowed,
+			expectValid: false,
 		},
-		// Invalid Response: Code not allowed
 		{
-			name: "Invalid Response Code not allowed",
-			in: &Response{
-				Code: 9999,
-				Body: "Created",
-			},
+			name:        "Invalid User all wrong fields",
+			in:          invalidUserAllWrongFields,
+			expectValid: false,
+		},
+		{
+			name:        "Invalid App Version too short",
+			in:          invalidAppVersionTooShort,
+			expectValid: false,
+		},
+		{
+			name:        "Invalid Response Code not allowed",
+			in:          invalidResponseCodeNotAllowed,
+			expectValid: false,
+		},
+		{
+			name:        "Invalid Scores slice with disallowed value",
+			in:          invalidScoresDisallowedValues,
+			expectValid: false,
 		},
 	}
 

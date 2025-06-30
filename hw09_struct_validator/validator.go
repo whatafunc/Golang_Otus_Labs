@@ -36,6 +36,13 @@ var devErr DeveloperError
 
 // var valErrs ValidationErrors // TO-Do remove as the switch is using default for this one as well
 
+type compareType int
+
+const (
+	compareMin compareType = iota
+	compareMax
+)
+
 func Validate(v interface{}) error {
 	var validationErrors ValidationErrors
 
@@ -113,40 +120,72 @@ func validateInput(v interface{}) (reflect.Value, error) {
 	}
 
 	if val.Kind() != reflect.Struct {
-		return reflect.Value{}, DeveloperError{Msg: fmt.Sprintf("not a struct type passed to validator, got %s", val.Kind())}
+		return reflect.Value{}, DeveloperError{Msg: fmt.Sprintf("not a struct type passed to validator, got %s",
+			val.Kind())}
 	}
 
 	return val, nil
 }
 
-func validateMinRule(field reflect.Value, param string, fieldName string) error {
-	if !isIntKind(field.Kind()) {
-		return DeveloperError{Msg: fmt.Sprintf("min validation only supports int kinds, field %s is %s",
+func validateIntBoundaryRule(field reflect.Value, param string, fieldName string, cmpType compareType) error {
+	limit, err := strconv.Atoi(param)
+	if err != nil {
+		return DeveloperError{Msg: fmt.Sprintf("invalid parameter for field %s", fieldName)}
+	}
+
+	check := func(val int) bool {
+		switch cmpType {
+		case compareMin:
+			return val < limit
+		case compareMax:
+			return val > limit
+		default:
+			return false
+		}
+	}
+
+	var errMsgSingle, errMsgElement string
+	switch cmpType {
+	case compareMin:
+		errMsgSingle = "value %d less than min %d"
+		errMsgElement = "element %d value %d less than min %d"
+	case compareMax:
+		errMsgSingle = "value %d greater than max %d"
+		errMsgElement = "element %d value %d greater than max %d"
+	}
+
+	switch {
+	case field.Kind() == reflect.Int:
+		val := int(field.Int())
+		if check(val) {
+			return fmt.Errorf(errMsgSingle, val, limit)
+		}
+	case field.Kind() == reflect.Slice:
+		for i := 0; i < field.Len(); i++ {
+			elem := field.Index(i)
+			if !isIntKind(elem.Kind()) {
+				return DeveloperError{Msg: fmt.Sprintf("validation only supports int kinds, element %d of field %s is %s",
+					i, fieldName, elem.Kind())}
+			}
+			val := int(elem.Int())
+			if check(val) {
+				return fmt.Errorf(errMsgElement, i, val, limit)
+			}
+		}
+	default:
+		return DeveloperError{Msg: fmt.Sprintf("validation only supports int kinds or slices of int, field %s is %s",
 			fieldName, field.Kind())}
 	}
-	minVal, err := strconv.Atoi(param)
-	if err != nil {
-		return DeveloperError{Msg: fmt.Sprintf("invalid min parameter for field %s", fieldName)}
-	}
-	if int(field.Int()) < minVal {
-		return fmt.Errorf("value %d less than min %d", field.Int(), minVal) // validation error
-	}
+
 	return nil
 }
 
+func validateMinRule(field reflect.Value, param string, fieldName string) error {
+	return validateIntBoundaryRule(field, param, fieldName, compareMin)
+}
+
 func validateMaxRule(field reflect.Value, param string, fieldName string) error {
-	if !isIntKind(field.Kind()) {
-		return DeveloperError{Msg: fmt.Sprintf("max validation only supports int kinds, field %s is %s",
-			fieldName, field.Kind())}
-	}
-	maxVal, err := strconv.Atoi(param)
-	if err != nil {
-		return DeveloperError{Msg: fmt.Sprintf("invalid max parameter for field %s", fieldName)}
-	}
-	if int(field.Int()) > maxVal {
-		return fmt.Errorf("value %d greater than max %d", field.Int(), maxVal) // validation error
-	}
-	return nil
+	return validateIntBoundaryRule(field, param, fieldName, compareMax)
 }
 
 func validateLenRule(field reflect.Value, param string, fieldName string) error {
@@ -181,51 +220,123 @@ func validateRegexpRule(field reflect.Value, param string, fieldName string) err
 	if err != nil {
 		return DeveloperError{Msg: fmt.Sprintf("invalid regexp pattern for field %s: %v", fieldName, err)}
 	}
-	if field.Kind() != reflect.String {
-		return DeveloperError{Msg: fmt.Sprintf("regexp validation only for string, field %s is %s", fieldName, field.Kind())}
+
+	switch {
+	case field.Kind() == reflect.String:
+		if !re.MatchString(field.String()) {
+			return fmt.Errorf("field %s does not match regexp %s", fieldName, param) // validation error
+		}
+	case field.Kind() == reflect.Slice:
+		for i := 0; i < field.Len(); i++ {
+			elem := field.Index(i)
+			if elem.Kind() != reflect.String {
+				return DeveloperError{
+					Msg: fmt.Sprintf("regexp validation only supports string slices, element %d of field %s is %s",
+						i, fieldName, elem.Kind()),
+				}
+			}
+			if !re.MatchString(elem.String()) {
+				return fmt.Errorf("element %d of field %s does not match regexp %s", i, fieldName, param) // validation error
+			}
+		}
+	default:
+		return DeveloperError{Msg: fmt.Sprintf("regexp validation only supports string or []string, field %s is %s",
+			fieldName, field.Kind())}
 	}
-	if !re.MatchString(field.String()) {
-		return fmt.Errorf("field %s does not match regexp %s", fieldName, param) // validation error
-	}
+
 	return nil
 }
 
 func validateInRule(field reflect.Value, param string, fieldName string) error {
-	allowed := strings.Split(param, ",")
-	found := false
+	allowedStr := strings.Split(param, ",")
+	for i := range allowedStr {
+		allowedStr[i] = strings.TrimSpace(allowedStr[i])
+	}
 
 	switch {
 	case field.Kind() == reflect.String:
-		val := field.String()
-		for _, a := range allowed {
-			if val == a {
-				found = true
-				break
-			}
+		return validateInSingleString(field.String(), allowedStr)
+	case field.Kind() == reflect.Int:
+		allowedInts, err := parseAllowedInts(allowedStr)
+		if err != nil {
+			return err
 		}
-	case isIntKind(field.Kind()):
-		var allowedInts []int64
-		for _, s := range allowed {
-			n, err := strconv.ParseInt(s, 10, 64)
+		return validateInSingleInt(field.Int(), allowedInts)
+	case field.Kind() == reflect.Slice:
+		if field.Len() == 0 {
+			return nil // empty slice passes
+		}
+		elemKind := field.Index(0).Kind()
+		switch {
+		case elemKind == reflect.String:
+			return validateInSliceString(field, allowedStr, fieldName)
+		case elemKind == reflect.Int:
+			allowedInts, err := parseAllowedInts(allowedStr)
 			if err != nil {
-				return DeveloperError{Msg: fmt.Sprintf("invalid integer value %q in 'in' rule: %v", s, err)}
+				return err
 			}
-			allowedInts = append(allowedInts, n)
-		}
-		val := field.Int()
-		for _, a := range allowedInts {
-			if val == a {
-				found = true
-				break
+			return validateInSliceInt(field, allowedInts, fieldName)
+		default:
+			return DeveloperError{
+				Msg: fmt.Sprintf("in validation only supports string & int kinds, field %s element kind %s",
+					fieldName, elemKind),
 			}
 		}
 	default:
-		return DeveloperError{Msg: fmt.Sprintf("in validation only supports string & int kinds, field %s is %s",
-			fieldName, field.Kind())}
+		return DeveloperError{
+			Msg: fmt.Sprintf("in validation only supports string & int kinds or slices thereof, field %s is %s",
+				fieldName, field.Kind()),
+		}
 	}
+}
 
-	if !found {
-		return fmt.Errorf("value %q not allowed, must be one of %v", field.Interface(), allowed) // validation error
+func parseAllowedInts(allowedStr []string) ([]int64, error) {
+	allowedInts := make([]int64, 0, len(allowedStr))
+
+	for _, s := range allowedStr {
+		n, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return nil, DeveloperError{Msg: fmt.Sprintf("invalid integer value %q in 'in' rule: %v", s, err)}
+		}
+		allowedInts = append(allowedInts, n)
+	}
+	return allowedInts, nil
+}
+
+func validateInSingleString(val string, allowed []string) error {
+	for _, a := range allowed {
+		if val == a {
+			return nil
+		}
+	}
+	return fmt.Errorf("value %q not allowed, must be one of %v", val, allowed)
+}
+
+func validateInSingleInt(val int64, allowed []int64) error {
+	for _, a := range allowed {
+		if val == a {
+			return nil
+		}
+	}
+	return fmt.Errorf("value %d not allowed, must be one of %v", val, allowed)
+}
+
+func validateInSliceString(field reflect.Value, allowed []string, fieldName string) error {
+	for i := 0; i < field.Len(); i++ {
+		val := field.Index(i).String()
+		if err := validateInSingleString(val, allowed); err != nil {
+			return fmt.Errorf("element %d of %s has err: %w", i, fieldName, err)
+		}
+	}
+	return nil
+}
+
+func validateInSliceInt(field reflect.Value, allowed []int64, fieldName string) error {
+	for i := 0; i < field.Len(); i++ {
+		val := field.Index(i).Int()
+		if err := validateInSingleInt(val, allowed); err != nil {
+			return fmt.Errorf("element %d %s has err: %w", i, fieldName, err)
+		}
 	}
 	return nil
 }
