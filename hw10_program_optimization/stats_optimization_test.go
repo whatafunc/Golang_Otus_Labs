@@ -46,6 +46,15 @@ func TestGetDomainStat_Time_And_Memory(t *testing.T) {
 	t.Logf("time used: %s / %s", result.T, timeLimit)
 	t.Logf("memory used: %dMb / %dMb", mem/mb, memoryLimit/mb)
 
+	/*
+		bash: go test -v -tags bench -memprofile=mem.pprof -cpuprofile=cpu.pprof .
+		  === RUN   TestGetDomainStat_Time_And_Memory
+		      stats_optimization_test.go:46: time used: 267.366333ms / 300ms
+		      stats_optimization_test.go:47: memory used: 29Mb / 30Mb
+		  --- PASS: TestGetDomainStat_Time_And_Memory (4.33s)
+		  PASS
+		  ok      github.com/whatafunc/Golang_Otus_Labs/hw10_program_optimization 5.069s*/
+
 	require.Less(t, int64(result.T), int64(timeLimit), "the program is too slow")
 	require.Less(t, mem, memoryLimit, "the program is too greedy")
 }

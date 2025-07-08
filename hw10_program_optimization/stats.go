@@ -1,12 +1,16 @@
 package hw10programoptimization
 
 import (
-	"encoding/json"
-	"fmt"
+	"bufio"
 	"io"
-	"regexp"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go" //nolint:depguard // allow json-iterator temporarily
 )
+
+// "github.com/minio/simdjson-go"
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type User struct {
 	ID       int
@@ -21,46 +25,31 @@ type User struct {
 type DomainStat map[string]int
 
 func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
-	u, err := getUsers(r) // comment
-	if err != nil {
-		return nil, fmt.Errorf("get users error: %w", err)
-	}
-	return countDomains(u, domain)
-}
-
-type users [100_000]User
-
-func getUsers(r io.Reader) (result users, err error) {
-	content, err := io.ReadAll(r)
-	if err != nil {
-		return
-	}
-
-	lines := strings.Split(string(content), "\n")
-	for i, line := range lines {
-		var user User
-		if err = json.Unmarshal([]byte(line), &user); err != nil {
-			return
-		}
-		result[i] = user
-	}
-	return
-}
-
-func countDomains(u users, domain string) (DomainStat, error) {
+	scanner := bufio.NewScanner(r)
 	result := make(DomainStat)
+	domain = strings.ToLower(domain)
 
-	for _, user := range u {
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
-		if err != nil {
+	for scanner.Scan() {
+		var user User
+		if err := json.Unmarshal(scanner.Bytes(), &user); err != nil {
 			return nil, err
 		}
 
-		if matched {
-			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
-			num++
-			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
+		email := strings.ToLower(user.Email)
+		at := strings.IndexByte(email, '@')
+		if at < 0 || at+1 >= len(email) {
+			continue
+		}
+		userDomain := email[at+1:]
+
+		if strings.HasSuffix(userDomain, "."+domain) {
+			result[userDomain]++
 		}
 	}
-	return result, nil
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil // map of domain/count of matches.
 }
