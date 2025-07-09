@@ -42,7 +42,7 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 		}
 		userDomain := email[at+1:]
 
-		if strings.HasSuffix(userDomain, "."+domain) {
+		if userDomain == domain || strings.HasSuffix(userDomain, "."+domain) {
 			result[userDomain]++
 		}
 	}
