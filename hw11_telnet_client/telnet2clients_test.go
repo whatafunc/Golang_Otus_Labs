@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"net"
@@ -16,7 +17,6 @@ func TestTelnetVS2Client(t *testing.T) {
 	t.Run("2 concurrent clients against server", func(t *testing.T) {
 		l, err := net.Listen("tcp", "127.0.0.1:")
 		require.NoError(t, err)
-		// Do NOT require no error on Close here; just defer close ignoring error
 		defer func() { _ = l.Close() }()
 
 		var serverWg sync.WaitGroup
@@ -31,7 +31,6 @@ func TestTelnetVS2Client(t *testing.T) {
 				default:
 					conn, err := l.Accept()
 					if err != nil {
-						// Exit gracefully if listener closed
 						if errors.Is(err, net.ErrClosed) {
 							return
 						}
@@ -57,7 +56,6 @@ func TestTelnetVS2Client(t *testing.T) {
 			}
 		}()
 
-		// Prepare client goroutines
 		var clientWg sync.WaitGroup
 		clients := []int{0, 1} // Two clients
 
@@ -76,26 +74,45 @@ func TestTelnetVS2Client(t *testing.T) {
 				require.NoError(t, client.Connect())
 				defer func() { require.NoError(t, client.Close()) }()
 
-				in.WriteString("hello from server\n")
-				err = client.Send()
-				require.NoError(t, err)
+				// Create cancellable context for this client
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
 
-				err = client.Receive()
-				require.NoError(t, err)
+				in.WriteString("hello from server\n")
+
+				errCh := make(chan error, 2)
+
+				// Run Receive concurrently
+				go func() {
+					errCh <- client.Receive(ctx)
+				}()
+
+				// Run Send concurrently
+				go func() {
+					errCh <- client.Send(ctx)
+				}()
+
+				// Wait for errors or completion
+				for i := 0; i < 2; i++ {
+					if err := <-errCh; err != nil {
+						// Cancel context to stop other goroutine on error
+						cancel()
+						require.NoError(t, err)
+					}
+				}
+
 				require.Equal(t, "world\n", out.String())
 			}()
 		}
 
-		// Wait for all clients to finish
 		clientWg.Wait()
 
 		// Signal server to stop accepting new connections
 		close(done)
 
-		// Close the listener to unblock Accept()
+		// Close listener to unblock Accept()
 		_ = l.Close()
 
-		// Wait for all server handlers to finish
 		serverWg.Wait()
 	})
 }

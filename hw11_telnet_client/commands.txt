@@ -1,0 +1,5 @@
+start server, example: nc -l localhost 4242
+compile code:          go build -o go-telnet
+run and send data:     ./go-telnet --timeout=5s localhost 4242
+use CTRL+C + ENTER to exit go app working as a client
+Notes: golang.org/x/term needs to be used to be more responsive to Ctrl+C without requiring Enter

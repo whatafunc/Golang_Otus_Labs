@@ -1,47 +1,59 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
 func main() {
-	// Define and parse --timeout flag
 	timeout := flag.Duration("timeout", 10*time.Second, "connection timeout (e.g. 10s, 1m)")
 	flag.Parse()
 
-	// After flags, expect exactly two positional args: host and port
 	args := flag.Args()
 	if len(args) != 2 {
 		fmt.Fprintf(os.Stderr, "Usage: %s [--timeout=duration] host port\n", os.Args[0])
 		os.Exit(1)
 	}
+
 	host := args[0]
 	port := args[1]
 	address := host + ":" + port
 
-	// Create client with stdin/stdout and timeout
+	// Create context that cancels on SIGINT or SIGTERM
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	client := NewTelnetClient(address, *timeout, os.Stdin, os.Stdout)
 
-	// Connect to server
 	if err := client.Connect(); err != nil {
-		log.Fatalf("Failed to connect: %v", err)
+		log.Printf("Failed to connect: %v", err)
 	}
 	defer client.Close()
+	errCh := make(chan error, 2)
 
-	// Run Receive in a goroutine (reads from server, writes to stdout)
+	// Run Receive with context in a goroutine
 	go func() {
-		if err := client.Receive(); err != nil {
-			log.Printf("Receive error: %v", err)
-			os.Exit(1)
-		}
+		errCh <- client.Receive(ctx)
 	}()
 
-	// Run Send in main goroutine (reads from stdin, writes to server)
-	if err := client.Send(); err != nil {
-		log.Printf("Send error: %v", err)
+	// Run Send with context in a goroutine
+	go func() {
+		errCh <- client.Send(ctx)
+	}()
+
+	// Wait for either Send or Receive to return an error or finish
+	for i := 0; i < 2; i++ {
+		if err := <-errCh; err != nil {
+			log.Printf("Client error: %v", err)
+			break
+		}
 	}
+
+	log.Println("Client shutdown complete")
 }

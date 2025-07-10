@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net"
 	"sync"
@@ -33,12 +34,29 @@ func TestTelnetClient(t *testing.T) {
 			require.NoError(t, client.Connect())
 			defer func() { require.NoError(t, client.Close()) }()
 
-			in.WriteString("hello\n")
-			err = client.Send()
-			require.NoError(t, err)
+			// Create a cancellable context for Send/Receive
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-			err = client.Receive()
-			require.NoError(t, err)
+			in.WriteString("hello\n")
+
+			// Run Send and Receive concurrently
+			errCh := make(chan error, 2)
+
+			go func() {
+				errCh <- client.Send(ctx)
+			}()
+
+			go func() {
+				errCh <- client.Receive(ctx)
+			}()
+
+			// Wait for both to finish or error
+			for i := 0; i < 2; i++ {
+				err := <-errCh
+				require.NoError(t, err)
+			}
+
 			require.Equal(t, "world\n", out.String())
 		}()
 
@@ -53,7 +71,7 @@ func TestTelnetClient(t *testing.T) {
 			request := make([]byte, 1024)
 			n, err := conn.Read(request)
 			require.NoError(t, err)
-			require.Equal(t, "hello\n", string(request)[:n])
+			require.Equal(t, "hello\n", string(request[:n]))
 
 			n, err = conn.Write([]byte("world\n"))
 			require.NoError(t, err)

@@ -11,8 +11,8 @@ import (
 type TelnetClient interface {
 	Connect() error
 	io.Closer
-	Send() error
-	Receive() error
+	Send(ctx context.Context) error
+	Receive(ctx context.Context) error
 }
 
 type telnetClient struct {
@@ -52,25 +52,39 @@ func (c *telnetClient) Close() error {
 	return nil
 }
 
-func (c *telnetClient) Send() error {
+func (c *telnetClient) Send(ctx context.Context) error {
 	scanner := bufio.NewScanner(c.in)
-	for scanner.Scan() {
-		text := scanner.Text() + "\n"
-		_, err := c.conn.Write([]byte(text))
-		if err != nil {
-			return err
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err() // context canceled, exit Send
+		default:
+			if !scanner.Scan() {
+				return scanner.Err()
+			}
+			text := scanner.Text() + "\n"
+			_, err := c.conn.Write([]byte(text))
+			if err != nil {
+				return err
+			}
 		}
 	}
-	return scanner.Err()
 }
 
-func (c *telnetClient) Receive() error {
+func (c *telnetClient) Receive(ctx context.Context) error {
 	scanner := bufio.NewScanner(c.conn)
-	for scanner.Scan() {
-		_, err := io.WriteString(c.out, scanner.Text()+"\n")
-		if err != nil {
-			return err
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err() // context canceled, exit Receive
+		default:
+			if !scanner.Scan() {
+				return scanner.Err()
+			}
+			_, err := io.WriteString(c.out, scanner.Text()+"\n")
+			if err != nil {
+				return err
+			}
 		}
 	}
-	return scanner.Err()
 }
