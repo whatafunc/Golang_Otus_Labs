@@ -1,5 +1,14 @@
-[logger]
-level = "INFO"
+logger:
+  level: "info" # info or error
 
-# TODO
-# ...
+http:
+  listen: ":8081"
+
+storage:
+  type: "memory" # or "redis" or "postgres"
+  redis:
+    addr: "localhost:6379"
+    password: ""
+    db: 0
+  postgres:
+    dsn: "host=localhost user=postgres password=secret dbname=calendar sslmode=disable"

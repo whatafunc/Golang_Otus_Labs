@@ -8,10 +8,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/app"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/server/http"
+	memorystorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/memory"
+	redisstorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/redis"
+	postgresstorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
@@ -28,13 +30,27 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
+	config, err := LoadConfig(configFile)
+	if err != nil {
+		panic("failed to load config: " + err.Error())
+	}
 	logg := logger.New(config.Logger.Level)
 
-	storage := memorystorage.New()
+	var storage app.Storage
+	switch config.Storage.Type {
+	case "memory":
+		storage = memorystorage.New()
+	case "redis":
+		storage = redisstorage.New(config.Storage.Redis)
+	case "postgres":
+		storage = postgresstorage.New(config.Storage.Postgres)
+	default:
+		logg.Error("unknown storage type: " + config.Storage.Type)
+		os.Exit(1)
+	}
 	calendar := app.New(logg, storage)
 
-	server := internalhttp.NewServer(logg, calendar)
+	server := internalhttp.NewServer(logg, calendar, config.HTTP.Listen)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -52,7 +68,7 @@ func main() {
 	}()
 
 	logg.Info("calendar is running...")
-
+	logg.Error("No error for calendar is running...")
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()

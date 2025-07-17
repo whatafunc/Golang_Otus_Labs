@@ -10,7 +10,8 @@ type App struct { // TODO
 type Logger interface { // TODO
 }
 
-type Storage interface { // TODO
+type Storage interface {
+	CreateEvent(ctx context.Context, id, title string) error
 }
 
 func New(logger Logger, storage Storage) *App {

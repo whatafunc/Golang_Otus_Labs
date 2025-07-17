@@ -1,6 +1,9 @@
 package memorystorage
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
 type Storage struct {
 	// TODO
@@ -9,6 +12,11 @@ type Storage struct {
 
 func New() *Storage {
 	return &Storage{}
+}
+
+func (s *Storage) CreateEvent(ctx context.Context, id, title string) error {
+	// TODO: implement in-memory logic
+	return nil
 }
 
 // TODO

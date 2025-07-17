@@ -1,4 +1,4 @@
-package postgresstorage
+package redisstorage
 
 import (
 	"context"
@@ -7,15 +7,15 @@ import (
 )
 
 type Storage struct {
-	cfg config.PostgresConfig
+	cfg config.RedisConfig
 }
 
-func New(cfg config.PostgresConfig) *Storage {
+func New(cfg config.RedisConfig) *Storage {
 	return &Storage{cfg: cfg}
 }
 
 // Implement the app.Storage interface methods as stubs
 func (s *Storage) CreateEvent(ctx context.Context, id, title string) error {
-	// TODO: implement Postgres logic
+	// TODO: implement Redis logic
 	return nil
 }
