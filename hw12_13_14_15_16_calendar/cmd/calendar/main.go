@@ -68,7 +68,7 @@ func main() {
 	}()
 
 	logg.Info("calendar is running...")
-	logg.Error("No error for calendar is running...")
+	// logg.Error("No error for calendar is running...")
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
