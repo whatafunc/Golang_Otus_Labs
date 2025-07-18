@@ -1,20 +1,31 @@
 package logger
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"strings"
+)
 
-type Logger struct { // TODO
+// Logger supports 'info' and 'error' levels
+
+type Logger struct {
+	level string
 }
 
 func New(level string) *Logger {
-	return &Logger{}
+	return &Logger{level: strings.ToLower(level)}
 }
 
 func (l Logger) Info(msg string) {
-	fmt.Println(msg)
+	if l.level == "info" {
+		fmt.Println(msg)
+	}
 }
 
 func (l Logger) Error(msg string) {
-	// TODO
+	if l.level == "info" || l.level == "error" {
+		fmt.Fprintln(os.Stderr, msg)
+	}
 }
 
 // TODO
