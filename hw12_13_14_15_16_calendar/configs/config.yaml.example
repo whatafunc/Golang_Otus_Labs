@@ -12,3 +12,4 @@ storage:
     db: 0
   postgres:
     dsn: "host=localhost user=postgres1 password=secret123 dbname=calendar01 sslmode=disable"
+migrations_path: "migrations" # should be in the root of the app
