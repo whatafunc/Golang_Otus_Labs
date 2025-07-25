@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Server struct {
@@ -20,12 +21,14 @@ type Application interface { // TODO
 }
 
 func NewServer(logger Logger, app Application, listen string) *Server {
+	_ = app // TODO
 	return &Server{listen: listen, logger: logger}
 }
 
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		_ = r
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Healthy OK"))
 	})
@@ -33,8 +36,9 @@ func (s *Server) Start(ctx context.Context) error {
 	handler := loggingMiddleware(s.logger)(mux)
 
 	s.httpServer = &http.Server{
-		Addr:    s.listen,
-		Handler: handler,
+		Addr:              s.listen,
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second, // for example
 	}
 
 	done := make(chan struct{})

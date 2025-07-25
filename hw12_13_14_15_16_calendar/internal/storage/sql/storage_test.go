@@ -1,3 +1,4 @@
+//nolint:gci // allowed for tests
 package postgresstorage
 
 import (
@@ -9,15 +10,22 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/pressly/goose/v3"
+	_ "github.com/jackc/pgx/v4/stdlib" //nolint:depguard // allowed as per our webinars
+
+	"github.com/pressly/goose/v3" //nolint:depguard // allowed as per our webinars
+
+	//nolint:depguard // allowed for test config loading
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config"
+
+	//nolint:depguard // allowed for test config loading
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
+
+	//nolint:depguard // allowed for test config loading
 	"gopkg.in/yaml.v3"
 )
 
 func testConfig() (config.PostgresConfig, string) {
-	configPath := filepath.Join("../../../configs/config.yaml")
+	configPath := filepath.Join("../../../configs/config.yaml") //nolint:gocritic //allowed for test files
 	f, err := os.Open(configPath)
 	if err != nil {
 		panic("failed to open config.yaml: " + err.Error())
@@ -30,7 +38,7 @@ func testConfig() (config.PostgresConfig, string) {
 				DSN string `yaml:"dsn"`
 			} `yaml:"postgres"`
 		} `yaml:"storage"`
-		MigrationsPath string `yaml:"migrations_path"`
+		MigrationsPath string `yaml:"migrationsPath"`
 	}
 	decoder := yaml.NewDecoder(f)
 	if err := decoder.Decode(&cfg); err != nil {
@@ -57,6 +65,7 @@ func runGooseMigrations(dsn, migrationsPath string) error {
 	return goose.Up(db, absPath)
 }
 
+//nolint:revive // temporary
 func countEvents(store *Storage, ctx context.Context) (int, error) {
 	var count int
 	row := store.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM events")

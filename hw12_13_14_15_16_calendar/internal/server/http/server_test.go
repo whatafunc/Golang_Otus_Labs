@@ -1,3 +1,4 @@
+//nolint:noctx // is ok for small test
 package internalhttp
 
 import (

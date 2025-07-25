@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
+	// Import pgx driver for database/sql usage with Postgres storage.
+	_ "github.com/jackc/pgx/v4/stdlib"                                              //nolint:depguard // allowed as per our webinars
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config"  //nolint:depguard
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage" //nolint:depguard
 )
 
 type Storage struct {
@@ -33,7 +34,15 @@ func (s *Storage) GetEvent(ctx context.Context, id int) (storage.Event, error) {
 	var event storage.Event
 	query := `SELECT id, title, description, start, "end", allday, clinic, userid, service FROM events WHERE id = $1`
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
-		&event.ID, &event.Title, &event.Description, &event.Start, &event.End, &event.AllDay, &event.Clinic, &event.UserID, &event.Service)
+		&event.ID,
+		&event.Title,
+		&event.Description,
+		&event.Start,
+		&event.End,
+		&event.AllDay,
+		&event.Clinic,
+		&event.UserID,
+		&event.Service)
 	return event, err
 }
 
@@ -47,7 +56,16 @@ func (s *Storage) ListEvents(ctx context.Context) ([]storage.Event, error) {
 	var events []storage.Event
 	for rows.Next() {
 		var event storage.Event
-		if err := rows.Scan(&event.ID, &event.Title, &event.Description, &event.Start, &event.End, &event.AllDay, &event.Clinic, &event.UserID, &event.Service); err != nil {
+		if err := rows.Scan(
+			&event.ID,
+			&event.Title,
+			&event.Description,
+			&event.Start,
+			&event.End,
+			&event.AllDay,
+			&event.Clinic,
+			&event.UserID,
+			&event.Service); err != nil {
 			return nil, err
 		}
 		events = append(events, event)

@@ -1,3 +1,4 @@
+//nolint:depguard // allowed - temporary
 package memorystorage
 
 import (
@@ -18,6 +19,7 @@ func New() *Storage {
 	return &Storage{events: make(map[int]storage.Event), nextID: 1}
 }
 
+//nolint:revive // unused-parameter - temporary
 func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -27,6 +29,7 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 	return nil
 }
 
+//nolint:revive // unused-parameter - temporary
 func (s *Storage) GetEvent(ctx context.Context, id int) (storage.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -37,6 +40,7 @@ func (s *Storage) GetEvent(ctx context.Context, id int) (storage.Event, error) {
 	return event, nil
 }
 
+//nolint:revive // unused-parameter - temporary
 func (s *Storage) ListEvents(ctx context.Context) ([]storage.Event, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
