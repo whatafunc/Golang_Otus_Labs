@@ -11,6 +11,6 @@ storage:
     password: ""
     db: 0
   postgres:
-    dsn: "${{ secrets.DSN }}" #migration = "migrations"
+    dsn: "" #migration = "migrations"
 
 migrationsPath: "./migrations"

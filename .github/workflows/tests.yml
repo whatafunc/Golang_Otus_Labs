@@ -9,6 +9,7 @@ env:
   GO111MODULE: "on"
   GOLANG_VERSION: ~1.24.5
   GOLANGCI_LINT_VERSION: v1.63.4
+  POSTGRES_DSN: ${{ secrets.DSN }}
   
 jobs:
   lint:
