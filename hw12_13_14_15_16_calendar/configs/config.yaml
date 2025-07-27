@@ -11,6 +11,6 @@ storage:
     password: ""
     db: 0
   postgres:
-    dsn: "" #migration = "migrations"
+    dsn: "test_DSN_replaced_by_SECRETS" #migration = "migrations"
 
 migrationsPath: "./migrations"
