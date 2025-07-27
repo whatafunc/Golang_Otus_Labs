@@ -80,6 +80,7 @@ func countEvents(store *Storage, ctx context.Context) (int, error) {
 func TestCreateAndGetEvent(t *testing.T) {
 	cfg, migrationsPath := testConfig()
 	dsn := os.Getenv("POSTGRES_DSN")
+	fmt.Println("!!! Current POSTGRES_DSN:", dsn)
 	cfg.DSN = dsn
 	if err := runGooseMigrations(cfg.DSN, migrationsPath); err != nil {
 		t.Fatalf("Failed to run goose migrations: %v", err)
