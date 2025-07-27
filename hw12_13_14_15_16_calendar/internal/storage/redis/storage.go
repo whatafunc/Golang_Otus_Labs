@@ -13,6 +13,10 @@ type Storage struct {
 	cfg config.RedisConfig
 }
 
+func (s *Storage) Cfg() config.RedisConfig {
+	panic("unimplemented")
+}
+
 func New(cfg config.RedisConfig) *Storage {
 	return &Storage{cfg: cfg}
 }
