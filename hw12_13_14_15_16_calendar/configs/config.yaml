@@ -1,0 +1,16 @@
+logger:
+  level: "info" # info or error
+
+http:
+  listen: ":8081"
+
+storage:
+  type: "memory" # "memory" or "redis" or "postgres"
+  redis:
+    addr: "localhost:6379"
+    password: ""
+    db: 0
+  postgres:
+    dsn: "host=192.168.1.50 user=otus_user1 password=otus_password1 dbname=events sslmode=disable" #migration = "migrations"
+
+migrationsPath: "./migrations"
