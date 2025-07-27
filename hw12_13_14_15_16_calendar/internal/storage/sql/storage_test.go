@@ -25,10 +25,12 @@ import (
 )
 
 func testConfig() (config.PostgresConfig, string) {
+	cwd, _ := os.Getwd()
+	fmt.Println("!!! Current working directory:", cwd)
 	configPath := filepath.Join("../../../configs/config.yaml") //nolint:gocritic //allowed for test files
 	f, err := os.Open(configPath)
 	if err != nil {
-		panic("failed to open config.yaml: " + err.Error())
+		panic("Test Events failed to open config.yaml: " + err.Error())
 	}
 	defer f.Close()
 
@@ -42,7 +44,7 @@ func testConfig() (config.PostgresConfig, string) {
 	}
 	decoder := yaml.NewDecoder(f)
 	if err := decoder.Decode(&cfg); err != nil {
-		panic("failed to decode config.yaml: " + err.Error())
+		panic("Test Events failed to decode config.yaml: " + err.Error())
 	}
 	// Always join with '../../../' to ensure root-level migrations
 	migrationsPath := filepath.Join("../../../", cfg.MigrationsPath)
