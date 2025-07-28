@@ -3,7 +3,9 @@ package memorystorage
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
 )
@@ -52,5 +54,28 @@ func TestGetEvent_NotFound(t *testing.T) {
 	_, err := store.GetEvent(context.Background(), 42)
 	if err == nil {
 		t.Errorf("Expected error for missing event, got nil")
+	}
+}
+
+func TestStorage_ContextCancellation(t *testing.T) {
+	s := New()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Immediate cancellation
+
+	err := s.CreateEvent(ctx, storage.Event{})
+	if !errors.Is(err, ErrContextCancel) {
+		t.Errorf("expected context cancel error, got %v", err)
+	}
+}
+
+func TestStorage_Timeout(t *testing.T) {
+	s := New()
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Microsecond)
+	defer cancel()
+	time.Sleep(2 * time.Microsecond) // Ensure timeout expires
+
+	_, err := s.GetEvent(ctx, 1)
+	if !errors.Is(err, ErrContextCancel) {
+		t.Errorf("expected context cancel error, got %v", err)
 	}
 }

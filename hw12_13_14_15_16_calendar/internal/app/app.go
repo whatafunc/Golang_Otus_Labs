@@ -10,7 +10,6 @@ import (
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/logger"
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/memory"
-	redisstorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/redis"
 	postgresstorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
@@ -27,8 +26,8 @@ func NewWithConfig(cfg config.Config, log *logger.Logger) *App {
 	switch cfg.Storage.Type {
 	case "memory":
 		store = memorystorage.New()
-	case "redis":
-		store = redisstorage.New(cfg.Storage.Redis)
+	// case "redis":
+	// 	store = redisstorage.New(cfg.Storage.Redis)
 	case "postgres":
 		store = postgresstorage.New(cfg.Storage.Postgres)
 	default:

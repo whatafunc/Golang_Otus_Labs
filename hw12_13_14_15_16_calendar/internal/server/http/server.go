@@ -39,6 +39,8 @@ func (s *Server) Start(ctx context.Context) error {
 		Addr:              s.listen,
 		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second, // for example
+		IdleTimeout:       30 * time.Second, // Explicitly set
+		WriteTimeout:      15 * time.Second, // Recommended
 	}
 
 	done := make(chan struct{})
