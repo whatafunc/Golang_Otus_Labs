@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
 )
 
@@ -40,7 +41,7 @@ func TestListEvents(t *testing.T) {
 			t.Fatalf("CreateEvent failed: %v", err)
 		}
 	}
-	events, err := store.ListEvents(context.Background())
+	events, err := store.ListEvents(context.Background(), storage.PeriodAll)
 	if err != nil {
 		t.Fatalf("ListEvents failed: %v", err)
 	}
@@ -78,4 +79,31 @@ func TestStorage_Timeout(t *testing.T) {
 	if !errors.Is(err, ErrContextCancel) {
 		t.Errorf("expected context cancel error, got %v", err)
 	}
+}
+
+func TestDeleteEvent(t *testing.T) {
+	s := New()
+	ctx := context.Background()
+
+	// Create test event
+	err := s.CreateEvent(ctx, storage.Event{Title: "Meeting"})
+	require.NoError(t, err)
+
+	// Delete existing event
+	err = s.DeleteEvent(ctx, 1)
+	require.NoError(t, err)
+
+	// Verify deletion
+	_, err = s.GetEvent(ctx, 1)
+	require.ErrorIs(t, err, ErrNotFound)
+
+	// Test deleting non-existent event
+	err = s.DeleteEvent(ctx, 999)
+	require.ErrorIs(t, err, ErrNotFound)
+
+	// Test context cancellation
+	cancelCtx, cancel := context.WithCancel(ctx)
+	cancel()
+	err = s.DeleteEvent(cancelCtx, 1)
+	require.ErrorIs(t, err, ErrContextCancel)
 }

@@ -45,7 +45,7 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 		return ErrContextCancel
 	default:
 		// Simulate slow operation for demonstration
-		time.Sleep(10 * time.Millisecond)
+		// time.Sleep(10 * time.Millisecond)
 
 		event.ID = s.nextID
 		s.nextID++
@@ -76,7 +76,14 @@ func (s *Storage) GetEvent(ctx context.Context, id int) (storage.Event, error) {
 	}
 }
 
-func (s *Storage) ListEvents(ctx context.Context) ([]storage.Event, error) {
+// ListEvents returns events, optionally filtered by time period.
+// PeriodAll returns all events, other periods filter relative to current time.
+func (s *Storage) ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error) {
+	// period := PeriodAll // default
+	// if len(periods) > 0 {
+	// 	period = periods[0]
+	// }
+
 	select {
 	case <-ctx.Done():
 		return nil, ErrContextCancel
@@ -90,16 +97,98 @@ func (s *Storage) ListEvents(ctx context.Context) ([]storage.Event, error) {
 	case <-ctx.Done():
 		return nil, ErrContextCancel
 	default:
+		now := time.Now() // Base period calculations on current time
 		result := make([]storage.Event, 0, len(s.events))
+
 		for _, event := range s.events {
-			// Check context periodically during long operations
 			select {
 			case <-ctx.Done():
 				return nil, ErrContextCancel
 			default:
-				result = append(result, event)
+				if period == storage.PeriodAll || matchesPeriod(*event.Start, now, period) {
+					result = append(result, event)
+				}
 			}
 		}
 		return result, nil
+	}
+}
+
+// matchesPeriod helper remains the same as previous implementation.
+func matchesPeriod(eventTime, baseTime time.Time, period storage.Period) bool {
+	switch period {
+	case storage.PeriodAll:
+		return true // Include all events when PeriodAll is specified.
+	case storage.PeriodDay:
+		return sameDay(eventTime, baseTime)
+	case storage.PeriodWeek:
+		return sameWeek(eventTime, baseTime)
+	case storage.PeriodMonth:
+		return sameMonth(eventTime, baseTime)
+	default:
+		return false
+	}
+}
+
+// sameDay/sameWeek/sameMonth helpers.
+func sameDay(a, b time.Time) bool {
+	y1, m1, d1 := a.Date()
+	y2, m2, d2 := b.Date()
+	return y1 == y2 && m1 == m2 && d1 == d2
+}
+
+func sameWeek(a, b time.Time) bool {
+	a = a.AddDate(0, 0, -int(a.Weekday()))
+	b = b.AddDate(0, 0, -int(b.Weekday()))
+	return sameDay(a, b)
+}
+
+func sameMonth(a, b time.Time) bool {
+	y1, m1, _ := a.Date()
+	y2, m2, _ := b.Date()
+	return y1 == y2 && m1 == m2
+}
+
+// DeleteEvent removes an event by ID. Returns ErrNotFound if event doesn't exist.
+func (s *Storage) DeleteEvent(ctx context.Context, id int) error {
+	// Check context before acquiring lock
+	select {
+	case <-ctx.Done():
+		return ErrContextCancel
+	default:
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Check context again after acquiring lock
+	select {
+	case <-ctx.Done():
+		return ErrContextCancel
+	default:
+		// Check if event exists
+		if _, exists := s.events[id]; !exists {
+			return ErrNotFound
+		}
+
+		// Simulate slow operation for demonstration
+		// time.Sleep(10 * time.Millisecond)
+
+		delete(s.events, id)
+		return nil
+	}
+}
+
+func (s *Storage) ClearAll(ctx context.Context) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return ErrContextCancel
+	default:
+		s.events = make(map[int]storage.Event)
+		s.nextID = 1
+		return nil
 	}
 }

@@ -45,7 +45,8 @@ func NewWithConfig(cfg config.Config, log *logger.Logger) *App {
 type storageInterface interface {
 	CreateEvent(ctx context.Context, event storage.Event) error
 	GetEvent(ctx context.Context, id int) (storage.Event, error)
-	ListEvents(ctx context.Context) ([]storage.Event, error)
+	ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error) // Updated
+	DeleteEvent(ctx context.Context, id int) error
 }
 
 // CreateEvent adds a new event using the configured storage.
