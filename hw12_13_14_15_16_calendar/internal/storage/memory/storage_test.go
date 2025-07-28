@@ -73,7 +73,7 @@ func TestStorage_Timeout(t *testing.T) {
 	s := New()
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Microsecond)
 	defer cancel()
-	time.Sleep(2 * time.Microsecond) // Ensure timeout expires
+	time.Sleep(20 * time.Microsecond) // Ensure timeout expires
 
 	_, err := s.GetEvent(ctx, 1)
 	if !errors.Is(err, ErrContextCancel) {
