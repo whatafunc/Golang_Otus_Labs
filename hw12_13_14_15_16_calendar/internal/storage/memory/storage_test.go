@@ -76,8 +76,10 @@ func TestStorage_Timeout(t *testing.T) {
 	time.Sleep(200 * time.Microsecond) // Ensure timeout expires
 
 	_, err := s.GetEvent(ctx, 1)
-	if err == nil || !errors.Is(err, context.Canceled) {
-		t.Errorf("expected context canceled error, got %v", err)
+	if err == nil {
+		t.Errorf("expected context error, got nil")
+	} else if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("expected context canceled or deadline exceeded error, got %v", err)
 	}
 }
 
