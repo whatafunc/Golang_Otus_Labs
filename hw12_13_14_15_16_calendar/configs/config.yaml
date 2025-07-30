@@ -6,10 +6,6 @@ http:
 
 storage:
   type: "memory" # "memory"  or "postgres"
-  # redis:
-  #   addr: "localhost:6379"
-  #   password: ""
-  #   db: 0
   postgres:
     dsn: "test_DSN_replaced_by_SECRETS" #migration = "migrations"
 

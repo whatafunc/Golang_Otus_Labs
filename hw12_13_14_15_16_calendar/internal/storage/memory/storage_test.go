@@ -64,7 +64,7 @@ func TestStorage_ContextCancellation(t *testing.T) {
 	cancel() // Immediate cancellation
 
 	err := s.CreateEvent(ctx, storage.Event{})
-	if !errors.Is(err, ErrContextCancel) {
+	if !errors.Is(err, context.Canceled) {
 		t.Errorf("expected context cancel error, got %v", err)
 	}
 }
@@ -76,8 +76,8 @@ func TestStorage_Timeout(t *testing.T) {
 	time.Sleep(20 * time.Microsecond) // Ensure timeout expires
 
 	_, err := s.GetEvent(ctx, 1)
-	if !errors.Is(err, ErrContextCancel) {
-		t.Errorf("expected context cancel error, got %v", err)
+	if err == nil || !errors.Is(err, context.Canceled) {
+		t.Errorf("expected context canceled error, got %v", err)
 	}
 }
 
@@ -105,5 +105,5 @@ func TestDeleteEvent(t *testing.T) {
 	cancelCtx, cancel := context.WithCancel(ctx)
 	cancel()
 	err = s.DeleteEvent(cancelCtx, 1)
-	require.ErrorIs(t, err, ErrContextCancel)
+	require.ErrorIs(t, err, context.Canceled)
 }

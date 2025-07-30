@@ -4,16 +4,14 @@ package memorystorage
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
 )
 
-var (
-	ErrNotFound      = errors.New("event not found")
-	ErrContextCancel = errors.New("operation canceled")
-)
+var ErrNotFound = errors.New("event not found")
 
 type Storage struct {
 	mu     sync.RWMutex
@@ -32,7 +30,7 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 	// Check context before acquiring lock
 	select {
 	case <-ctx.Done():
-		return ErrContextCancel
+		return fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 	}
 
@@ -42,7 +40,7 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 	// Check context again after acquiring lock
 	select {
 	case <-ctx.Done():
-		return ErrContextCancel
+		return fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 		// Simulate slow operation for demonstration
 		// time.Sleep(10 * time.Millisecond)
@@ -57,7 +55,7 @@ func (s *Storage) CreateEvent(ctx context.Context, event storage.Event) error {
 func (s *Storage) GetEvent(ctx context.Context, id int) (storage.Event, error) {
 	select {
 	case <-ctx.Done():
-		return storage.Event{}, ErrContextCancel
+		return storage.Event{}, fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 	}
 
@@ -66,7 +64,7 @@ func (s *Storage) GetEvent(ctx context.Context, id int) (storage.Event, error) {
 
 	select {
 	case <-ctx.Done():
-		return storage.Event{}, ErrContextCancel
+		return storage.Event{}, fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 		event, ok := s.events[id]
 		if !ok {
@@ -86,7 +84,7 @@ func (s *Storage) ListEvents(ctx context.Context, period storage.Period) ([]stor
 
 	select {
 	case <-ctx.Done():
-		return nil, ErrContextCancel
+		return nil, fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 	}
 
@@ -95,7 +93,7 @@ func (s *Storage) ListEvents(ctx context.Context, period storage.Period) ([]stor
 
 	select {
 	case <-ctx.Done():
-		return nil, ErrContextCancel
+		return nil, fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 		now := time.Now() // Base period calculations on current time
 		result := make([]storage.Event, 0, len(s.events))
@@ -103,7 +101,7 @@ func (s *Storage) ListEvents(ctx context.Context, period storage.Period) ([]stor
 		for _, event := range s.events {
 			select {
 			case <-ctx.Done():
-				return nil, ErrContextCancel
+				return nil, fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 			default:
 				if period == storage.PeriodAll || matchesPeriod(*event.Start, now, period) {
 					result = append(result, event)
@@ -154,7 +152,7 @@ func (s *Storage) DeleteEvent(ctx context.Context, id int) error {
 	// Check context before acquiring lock
 	select {
 	case <-ctx.Done():
-		return ErrContextCancel
+		return fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 	}
 
@@ -164,7 +162,7 @@ func (s *Storage) DeleteEvent(ctx context.Context, id int) error {
 	// Check context again after acquiring lock
 	select {
 	case <-ctx.Done():
-		return ErrContextCancel
+		return fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 		// Check if event exists
 		if _, exists := s.events[id]; !exists {
@@ -185,7 +183,7 @@ func (s *Storage) ClearAll(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		return ErrContextCancel
+		return fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 	default:
 		s.events = make(map[int]storage.Event)
 		s.nextID = 1
