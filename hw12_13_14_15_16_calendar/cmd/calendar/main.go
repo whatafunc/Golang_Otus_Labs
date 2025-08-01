@@ -1,3 +1,4 @@
+//nolint:depguard // not finished app
 package main
 
 import (
@@ -8,10 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/app"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/server/http"
 )
 
 var configFile string
@@ -28,13 +28,15 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	cfg, err := LoadConfig(configFile)
+	if err != nil {
+		panic("failed to load config: " + err.Error())
+	}
+	logg := logger.New(cfg.Logger.Level)
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	calendar := app.NewWithConfig(cfg, logg)
 
-	server := internalhttp.NewServer(logg, calendar)
+	server := internalhttp.NewServer(logg, calendar, cfg.HTTP.Listen)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -52,7 +54,7 @@ func main() {
 	}()
 
 	logg.Info("calendar is running...")
-
+	// logg.Error("No error for calendar is running...")
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())
 		cancel()
