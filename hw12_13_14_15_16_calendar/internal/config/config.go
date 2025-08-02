@@ -17,14 +17,7 @@ type HTTPConf struct {
 
 type StorageConfig struct {
 	Type     string         `yaml:"type"`
-	Redis    RedisConfig    `yaml:"redis"`
 	Postgres PostgresConfig `yaml:"postgres"`
-}
-
-type RedisConfig struct {
-	Addr     string `yaml:"addr"`
-	Password string `yaml:"password"`
-	DB       int    `yaml:"db"`
 }
 
 type PostgresConfig struct {

@@ -50,12 +50,11 @@ type storageInterface interface {
 }
 
 // CreateEvent adds a new event using the configured storage.
-func (a *App) CreateEvent(ctx context.Context, id int, title string) error {
-	event := storage.Event{
-		ID:    id,
-		Title: title,
-	}
+func (a *App) CreateEvent(ctx context.Context, event storage.Event) error {
 	return a.store.CreateEvent(ctx, event)
 }
 
-// Optionally, you could add other methods like GetEvent, ListEvents etc.
+// ListEvents retrieves events from the configured storage.
+func (a *App) ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error) {
+	return a.store.ListEvents(ctx, period)
+}

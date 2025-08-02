@@ -1,52 +1,181 @@
 package internalhttp
 
 import (
-	"io"
+	"bytes"
+	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
 )
 
-type testLogger struct{}
+// MockLogger implements the Logger interface for testing
+type MockLogger struct{}
 
-func (l *testLogger) Info(msg string)  {} //nolint:revive
-func (l *testLogger) Error(msg string) {} //nolint:revive
+func (m *MockLogger) Info(msg string) {}
 
-func TestHealthHandler(t *testing.T) {
-	// Create a test request
-	req := httptest.NewRequest("GET", "/health", nil)
+// MockApplication implements the Application interface for testing
+type MockApplication struct {
+	events map[int]storage.Event
+}
 
-	// Create a response recorder
-	w := httptest.NewRecorder()
+func NewMockApplication() *MockApplication {
+	return &MockApplication{
+		events: make(map[int]storage.Event),
+	}
+}
 
-	// Create minimal server just for handler testing
-	server := &Server{
-		logger: &testLogger{},
+func (m *MockApplication) CreateEvent(ctx context.Context, event storage.Event) error {
+	m.events[event.ID] = event
+	return nil
+}
+
+func (m *MockApplication) ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error) {
+	events := make([]storage.Event, 0, len(m.events))
+	for _, event := range m.events {
+		events = append(events, event)
+	}
+	return events, nil
+}
+
+func TestServer_HandleCreateEvent(t *testing.T) {
+	// Setup
+	logger := &MockLogger{}
+	app := NewMockApplication()
+	server := NewServer(logger, app, ":8080")
+
+	// Test cases
+	testCases := []struct {
+		name           string
+		method         string
+		requestBody    CreateEventRequest
+		expectedStatus int
+		expectedError  bool
+	}{
+		{
+			name:   "successful event creation",
+			method: http.MethodPost,
+			requestBody: CreateEventRequest{
+				ID:          1,
+				Title:       "Test Event",
+				Description: "Test Description",
+			},
+			expectedStatus: http.StatusCreated,
+			expectedError:  false,
+		},
+		{
+			name:   "missing title",
+			method: http.MethodPost,
+			requestBody: CreateEventRequest{
+				ID:    2,
+				Title: "",
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  true,
+		},
+		{
+			name:           "wrong method",
+			method:         http.MethodGet,
+			requestBody:    CreateEventRequest{},
+			expectedStatus: http.StatusMethodNotAllowed,
+			expectedError:  true,
+		},
 	}
 
-	// Create the handler
-	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		_ = r
-		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, "Healthy OK")
-	})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create request body
+			body, _ := json.Marshal(tc.requestBody)
+			req := httptest.NewRequest(tc.method, "/events", bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
 
-	// Wrap with middleware if needed
-	handler := loggingMiddleware(server.logger)(mux)
+			// Create response recorder
+			w := httptest.NewRecorder()
 
-	// Serve the request
-	handler.ServeHTTP(w, req)
+			// Call the handler
+			server.handleCreateEvent(w, req)
 
-	// Check the response
-	resp := w.Result()
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("expected 200 OK, got %d", resp.StatusCode)
+			// Check status code
+			if w.Code != tc.expectedStatus {
+				t.Errorf("expected status %d, got %d", tc.expectedStatus, w.Code)
+			}
+
+			// Check response body for successful creation
+			if !tc.expectedError && tc.expectedStatus == http.StatusCreated {
+				var response CreateEventResponse
+				if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+					t.Errorf("failed to unmarshal response: %v", err)
+				}
+				if !response.Success {
+					t.Errorf("expected success=true, got %v", response.Success)
+				}
+			}
+		})
+	}
+}
+
+func TestServer_HandleListEvents(t *testing.T) {
+	// Setup
+	logger := &MockLogger{}
+	app := NewMockApplication()
+	server := NewServer(logger, app, ":8080")
+
+	// Add some test events
+	app.CreateEvent(context.Background(), storage.Event{ID: 1, Title: "Event 1"})
+	app.CreateEvent(context.Background(), storage.Event{ID: 2, Title: "Event 2"})
+
+	// Test cases
+	testCases := []struct {
+		name           string
+		method         string
+		expectedStatus int
+		expectedEvents int
+	}{
+		{
+			name:           "successful list events",
+			method:         http.MethodGet,
+			expectedStatus: http.StatusOK,
+			expectedEvents: 2,
+		},
+		{
+			name:           "wrong method",
+			method:         http.MethodPost,
+			expectedStatus: http.StatusMethodNotAllowed,
+			expectedEvents: 0,
+		},
 	}
 
-	body, _ := io.ReadAll(resp.Body)
-	if !strings.Contains(string(body), "Healthy OK") {
-		t.Errorf("unexpected body: %s", string(body))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create request
+			req := httptest.NewRequest(tc.method, "/api/events", nil)
+
+			// Create response recorder
+			w := httptest.NewRecorder()
+
+			// Call the handler
+			server.handleListEvents(w, req)
+
+			// Check status code
+			if w.Code != tc.expectedStatus {
+				t.Errorf("expected status %d, got %d", tc.expectedStatus, w.Code)
+			}
+
+			// Check response body for successful request
+			if tc.expectedStatus == http.StatusOK {
+				var response ListEventsResponse
+				if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+					t.Errorf("failed to unmarshal response: %v", err)
+				}
+				if !response.Success {
+					t.Errorf("expected success=true, got %v", response.Success)
+				}
+				if len(response.Events) != tc.expectedEvents {
+					t.Errorf("expected %d events, got %d", tc.expectedEvents, len(response.Events))
+				}
+			}
+		})
 	}
 }
