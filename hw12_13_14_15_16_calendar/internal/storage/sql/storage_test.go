@@ -116,6 +116,14 @@ func TestCreateAndGetEvent(t *testing.T) {
 		t.Fatalf("CreateEvent failed: %v", err)
 	}
 
+	countAfterCreate, err := countEvents(store, ctx)
+	if err != nil {
+		t.Fatalf("Failed to count events after inserting 1 evnt: %v", err)
+	}
+	if countBefore != countAfterCreate-1 {
+		t.Errorf("Expected event count to be equal after test, before=%d after=%d", countBefore, countAfterCreate-1)
+	}
+
 	var id int
 	row := store.db.QueryRowContext(ctx, "SELECT id FROM events ORDER BY id DESC LIMIT 1")
 	if err := row.Scan(&id); err != nil {
@@ -128,7 +136,6 @@ func TestCreateAndGetEvent(t *testing.T) {
 	if got.Title != event.Title || got.Description != event.Description || got.AllDay != event.AllDay {
 		t.Errorf("GetEvent returned wrong data: got %+v, want %+v", got, event)
 	}
-
 	_, err = store.db.ExecContext(ctx, "DELETE FROM events WHERE id = $1", id)
 	if err != nil {
 		t.Fatalf("Failed to delete inserted event: %v", err)

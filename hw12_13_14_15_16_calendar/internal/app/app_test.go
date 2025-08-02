@@ -112,7 +112,8 @@ func TestApp_CreateEvent(t *testing.T) {
 			}
 
 			// Exercise
-			err := app.CreateEvent(ctx, tc.id, tc.title)
+			event := storage.Event{ID: tc.id, Title: tc.title}
+			err := app.CreateEvent(ctx, event)
 
 			// Verify
 			if tc.wantErr {
