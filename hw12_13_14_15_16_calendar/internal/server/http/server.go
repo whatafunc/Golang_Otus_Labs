@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage" //nolint:depguard
 )
 
 type Server struct {
@@ -23,34 +25,50 @@ type Logger interface { // TODO
 
 type Application interface {
 	CreateEvent(ctx context.Context, event storage.Event) error
+	GetEvent(ctx context.Context, id int) (storage.Event, error)
 	ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error)
+	DeleteEvent(ctx context.Context, id int) error
 }
 
-// CreateEventRequest represents the request structure for creating an event
+// CreateEventRequest represents the request structure for creating an event.
 type CreateEventRequest struct {
 	ID          int        `json:"id"`
 	Title       string     `json:"title"`
 	Description string     `json:"description,omitempty"`
 	Start       *time.Time `json:"start,omitempty"`
 	End         *time.Time `json:"end,omitempty"`
-	AllDay      float64    `json:"all_day,omitempty"`
+	AllDay      float64    `json:"allDay,omitempty"`
 	Clinic      *string    `json:"clinic,omitempty"`
-	UserID      *int       `json:"user_id,omitempty"`
+	UserID      *int       `json:"userId,omitempty"`
 	Service     *string    `json:"service,omitempty"`
 }
 
-// CreateEventResponse represents the response structure for creating an event
+// CreateEventResponse represents the response structure for creating an event.
 type CreateEventResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message,omitempty"`
 	Error   string `json:"error,omitempty"`
 }
 
-// ListEventsResponse represents the response structure for listing events
+// ListEventsResponse represents the response structure for listing events.
 type ListEventsResponse struct {
 	Success bool            `json:"success"`
 	Events  []storage.Event `json:"events,omitempty"`
 	Error   string          `json:"error,omitempty"`
+}
+
+// DeleteEventResponse represents the response structure for deleting an event.
+type DeleteEventResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message,omitempty"`
+	Error   string `json:"error,omitempty"`
+}
+
+// GetEventResponse represents the response structure for getting a single event.
+type GetEventResponse struct {
+	Success bool          `json:"success"`
+	Event   storage.Event `json:"event,omitempty"`
+	Error   string        `json:"error,omitempty"`
 }
 
 func NewServer(logger Logger, app Application, listen string) *Server {
@@ -65,10 +83,12 @@ func (s *Server) Start(ctx context.Context) error {
 		w.Write([]byte("Healthy OK"))
 	})
 
-	// Add the create event endpoint
+	// Add the create event endpoint.
 	mux.HandleFunc("/api/create", s.handleCreateEvent)
-	// Add the list events endpoint
+	// Add the list events endpoint.
 	mux.HandleFunc("/api/events", s.handleListEvents)
+	// Add the get/delete event endpoints (handled by the same handler).
+	mux.HandleFunc("/api/events/", s.handleSingleEvent)
 
 	handler := loggingMiddleware(s.logger)(mux)
 
@@ -99,7 +119,7 @@ func (s *Server) Start(ctx context.Context) error {
 	return nil
 }
 
-// handleCreateEvent handles POST requests to create a new event
+// handleCreateEvent handles POST requests to create a new event.
 func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -112,13 +132,13 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
+	// Validate required fields.
 	if req.Title == "" {
 		http.Error(w, "Title is required", http.StatusBadRequest)
 		return
 	}
 
-	// Create the event using the application layer
+	// Create the event using the application layer.
 	event := storage.Event{
 		ID:          req.ID,
 		Title:       req.Title,
@@ -151,16 +171,27 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// handleListEvents handles GET requests to list all events
+// handleListEvents handles GET requests to list all events.
 func (s *Server) handleListEvents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// For now, we'll list all events without period filtering
-	// You can extend this to accept query parameters for period filtering
-	events, err := s.app.ListEvents(r.Context(), storage.PeriodAll)
+	periodStr := r.URL.Query().Get("period")
+	var period storage.Period
+	switch periodStr {
+	case "day":
+		period = storage.PeriodDay
+	case "week":
+		period = storage.PeriodWeek
+	case "month":
+		period = storage.PeriodMonth
+	default:
+		period = storage.PeriodAll
+	}
+
+	events, err := s.app.ListEvents(r.Context(), period)
 	if err != nil {
 		response := ListEventsResponse{
 			Success: false,
@@ -175,6 +206,81 @@ func (s *Server) handleListEvents(w http.ResponseWriter, r *http.Request) {
 	response := ListEventsResponse{
 		Success: true,
 		Events:  events,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleSingleEvent handles GET and DELETE requests for a single event by ID.
+func (s *Server) handleSingleEvent(w http.ResponseWriter, r *http.Request) {
+	// Extract event ID from URL path
+	// Expected format: /api/events/{id}
+	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(pathParts) != 3 || pathParts[0] != "api" || pathParts[1] != "events" {
+		http.Error(w, "Invalid URL format. Expected: /api/events/{id}", http.StatusBadRequest)
+		return
+	}
+
+	// Parse event ID
+	eventID, err := strconv.Atoi(pathParts[2])
+	if err != nil {
+		http.Error(w, "Invalid event ID. Must be a number.", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		s.handleGetEvent(w, r, eventID)
+	case http.MethodDelete:
+		s.handleDeleteEvent(w, r, eventID)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// handleGetEvent handles GET requests to retrieve a single event by ID.
+func (s *Server) handleGetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
+	// Get the event using the application layer
+	event, err := s.app.GetEvent(r.Context(), eventID)
+	if err != nil {
+		response := GetEventResponse{
+			Success: false,
+			Error:   err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	response := GetEventResponse{
+		Success: true,
+		Event:   event,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleDeleteEvent handles DELETE requests to delete an event by ID.
+func (s *Server) handleDeleteEvent(w http.ResponseWriter, r *http.Request, eventID int) {
+	// Delete the event using the application layer
+	err := s.app.DeleteEvent(r.Context(), eventID)
+	if err != nil {
+		response := DeleteEventResponse{
+			Success: false,
+			Error:   err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	response := DeleteEventResponse{
+		Success: true,
+		Message: "Event deleted successfully",
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

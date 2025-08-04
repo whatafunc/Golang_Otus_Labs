@@ -7,6 +7,6 @@ http:
 storage:
   type: "postgres" # "memory"  or  "postgres"
   postgres:
-    dsn: "test_DSN_replaced_by_SECRETS" #migration = "migrations"
+    dsn: "host=acs_modx303.cozymods.com user=otus_user1 password=otus_password1 dbname=events sslmode=disable" #migration = "migrations"
 
 migrationsPath: "./migrations"
