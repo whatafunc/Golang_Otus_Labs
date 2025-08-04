@@ -54,7 +54,17 @@ func (a *App) CreateEvent(ctx context.Context, event storage.Event) error {
 	return a.store.CreateEvent(ctx, event)
 }
 
+// GetEvent retrieves a single event from the configured storage.
+func (a *App) GetEvent(ctx context.Context, id int) (storage.Event, error) {
+	return a.store.GetEvent(ctx, id)
+}
+
 // ListEvents retrieves events from the configured storage.
 func (a *App) ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error) {
 	return a.store.ListEvents(ctx, period)
+}
+
+// DeleteEvent removes an event from the configured storage.
+func (a *App) DeleteEvent(ctx context.Context, id int) error {
+	return a.store.DeleteEvent(ctx, id)
 }

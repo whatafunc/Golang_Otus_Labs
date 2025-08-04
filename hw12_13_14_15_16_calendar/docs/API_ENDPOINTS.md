@@ -116,6 +116,114 @@ Error (500 Internal Server Error):
 curl -X GET http://localhost:8080/api/events
 ```
 
+## Get Event
+
+Retrieves a single event from the calendar by ID.
+
+**Endpoint:** `GET /api/events/{id}`
+
+**Path Parameters:**
+- `id`: The ID of the event to retrieve (integer)
+
+**Response:**
+
+Success (200 OK):
+```json
+{
+  "success": true,
+  "event": {
+    "id": 1,
+    "title": "Team Meeting",
+    "description": "Weekly team sync",
+    "start": "2024-01-15T09:00:00Z",
+    "end": "2024-01-15T10:00:00Z",
+    "all_day": 0,
+    "clinic": null,
+    "user_id": null,
+    "service": null
+  }
+}
+```
+
+Error (400 Bad Request):
+```json
+{
+  "success": false,
+  "error": "Invalid event ID. Must be a number."
+}
+```
+
+Error (404 Not Found):
+```json
+{
+  "success": false,
+  "error": "event not found"
+}
+```
+
+Error (500 Internal Server Error):
+```json
+{
+  "success": false,
+  "error": "Database error message"
+}
+```
+
+**Example Usage:**
+
+```bash
+curl -X GET http://localhost:8080/api/events/1
+```
+
+## Delete Event
+
+Deletes an event from the calendar by ID.
+
+**Endpoint:** `DELETE /api/events/{id}`
+
+**Path Parameters:**
+- `id`: The ID of the event to delete (integer)
+
+**Response:**
+
+Success (200 OK):
+```json
+{
+  "success": true,
+  "message": "Event deleted successfully"
+}
+```
+
+Error (400 Bad Request):
+```json
+{
+  "success": false,
+  "error": "Invalid event ID. Must be a number."
+}
+```
+
+Error (404 Not Found):
+```json
+{
+  "success": false,
+  "error": "event not found"
+}
+```
+
+Error (500 Internal Server Error):
+```json
+{
+  "success": false,
+  "error": "Database error message"
+}
+```
+
+**Example Usage:**
+
+```bash
+curl -X DELETE http://localhost:8080/api/events/1
+```
+
 ## Health Check
 
 **Endpoint:** `GET /health`
