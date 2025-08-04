@@ -49,7 +49,7 @@ curl -X POST http://localhost:8081/api/create \
     "title": "Another Test Event",
     "description": "Second test event",
     "start": "2025-08-04T14:00:00Z",
-    "end": "2024-08-04T15:00:00Z"
+    "end": "2025-08-04T15:00:00Z"
   }' | jq '.'
 
 echo
