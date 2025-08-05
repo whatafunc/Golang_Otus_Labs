@@ -17,7 +17,7 @@ type MockLogger struct{}
 
 func (m *MockLogger) Info(msg string) {}
 
-// MockApplication implements the Application interface for testing
+// MockApplication implements the Application interface for testing.
 type MockApplication struct {
 	events map[int]storage.Event
 }
