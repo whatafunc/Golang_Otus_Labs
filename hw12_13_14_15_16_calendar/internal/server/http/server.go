@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage" //nolint:depguard
@@ -87,8 +86,10 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("/api/create", s.handleCreateEvent)
 	// Add the list events endpoint.
 	mux.HandleFunc("/api/events", s.handleListEvents)
-	// Add the get/delete event endpoints (handled by the same handler).
-	mux.HandleFunc("/api/events/", s.handleSingleEvent)
+	// Add the get event endpoints.
+	mux.HandleFunc("/api/get/{id}", s.handleGetEvent)
+	// Add the get/delete event endpoints.
+	mux.HandleFunc("/api/delete/{id}", s.handleDeleteEvent)
 
 	handler := loggingMiddleware(s.logger)(mux)
 
@@ -212,35 +213,15 @@ func (s *Server) handleListEvents(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// handleSingleEvent handles GET and DELETE requests for a single event by ID.
-func (s *Server) handleSingleEvent(w http.ResponseWriter, r *http.Request) {
-	// Extract event ID from URL path
-	// Expected format: /api/events/{id}
-	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(pathParts) != 3 || pathParts[0] != "api" || pathParts[1] != "events" {
-		http.Error(w, "Invalid URL format. Expected: /api/events/{id}", http.StatusBadRequest)
-		return
-	}
-
-	// Parse event ID
-	eventID, err := strconv.Atoi(pathParts[2])
-	if err != nil {
-		http.Error(w, "Invalid event ID. Must be a number.", http.StatusBadRequest)
-		return
-	}
-
-	switch r.Method {
-	case http.MethodGet:
-		s.handleGetEvent(w, r, eventID)
-	case http.MethodDelete:
-		s.handleDeleteEvent(w, r, eventID)
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
 // handleGetEvent handles GET requests to retrieve a single event by ID.
-func (s *Server) handleGetEvent(w http.ResponseWriter, r *http.Request, eventID int) {
+func (s *Server) handleGetEvent(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	eventID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid ID", http.StatusBadRequest)
+		return
+	}
+
 	// Get the event using the application layer
 	event, err := s.app.GetEvent(r.Context(), eventID)
 	if err != nil {
@@ -264,9 +245,16 @@ func (s *Server) handleGetEvent(w http.ResponseWriter, r *http.Request, eventID 
 }
 
 // handleDeleteEvent handles DELETE requests to delete an event by ID.
-func (s *Server) handleDeleteEvent(w http.ResponseWriter, r *http.Request, eventID int) {
+func (s *Server) handleDeleteEvent(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	eventID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid ID", http.StatusBadRequest)
+		return
+	}
+
 	// Delete the event using the application layer
-	err := s.app.DeleteEvent(r.Context(), eventID)
+	err = s.app.DeleteEvent(r.Context(), eventID)
 	if err != nil {
 		response := DeleteEventResponse{
 			Success: false,

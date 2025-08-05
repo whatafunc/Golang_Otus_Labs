@@ -5,7 +5,10 @@
 
 echo "=== Testing Calendar API ==="
 echo
+echo "CHECK health endpoint..."
+curl -X GET http://localhost:8081/health
 
+echo
 # Test 1: Create an event
 echo "1. Creating an event..."
 curl -X POST http://localhost:8081/api/create \
@@ -46,10 +49,10 @@ curl -X POST http://localhost:8081/api/create \
   -H "Content-Type: application/json" \
   -d '{
     "id": 2,
-    "title": "Another Test Event",
-    "description": "Second test event",
-    "start": "2025-08-04T14:00:00Z",
-    "end": "2025-08-04T15:00:00Z"
+    "title": "Another Test Event todays",
+    "description": "todays test event",
+    "start": "2025-08-05T14:00:00Z",
+    "end": "2025-08-05T15:00:00Z"
   }' | jq '.'
 
 echo
@@ -60,22 +63,21 @@ echo
 echo "3. Listing day events..."
 curl -X GET http://localhost:8081/api/events?period=day | jq '.'
 
+echo
+echo "4.1 Testing get NonExisting event endpoint..."
+curl -X GET http://localhost:8081/api/get/26 | jq '.'
 
 echo
-echo "4. Testing get event endpoint..."
-curl -X GET http://localhost:8081/api/events/26 | jq '.'
+echo "4.2 Testing get Existing event endpoint..."
+curl -X GET http://localhost:8081/api/get/27 | jq '.'
 
 echo
 echo "5. Testing delete endpoint..."
-curl -X DELETE http://localhost:8081/api/events/26
+curl -X DELETE http://localhost:8081/api/delete/27
 
 echo
 echo "6. Listing events after deletion..."
 curl -X GET http://localhost:8081/api/events | jq '.'
-
-echo
-echo "7. Testing health endpoint..."
-curl -X GET http://localhost:8081/health
 
 echo
 echo "=== Test completed ===" 
