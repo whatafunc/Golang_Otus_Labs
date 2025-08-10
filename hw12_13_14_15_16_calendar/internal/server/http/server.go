@@ -27,6 +27,7 @@ type Application interface {
 	GetEvent(ctx context.Context, id int) (storage.Event, error)
 	ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error)
 	DeleteEvent(ctx context.Context, id int) error
+	UpdateEvent(ctx context.Context, event storage.Event) error
 }
 
 // CreateEventRequest represents the request structure for creating an event.
@@ -76,20 +77,28 @@ func NewServer(logger Logger, app Application, listen string) *Server {
 
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		_ = r
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Healthy OK"))
 	})
 
 	// Add the create event endpoint.
-	mux.HandleFunc("/api/create", s.handleCreateEvent)
+	mux.HandleFunc("POST /api/create", s.handleCreateEvent)
 	// Add the list events endpoint.
-	mux.HandleFunc("/api/events", s.handleListEvents)
+	mux.HandleFunc("GET /api/events", s.handleListEvents)
+	// Add the Specific Day list events endpoint.
+	mux.HandleFunc("GET /api/eventsDay", s.handleListEventsDay)
+	// Add the Specific Week list events endpoint.
+	mux.HandleFunc("GET /api/eventsWeek", s.handleListEventsWeek)
+	// Add the Specific Month list events endpoint.
+	mux.HandleFunc("GET /api/eventsMonth", s.handleListEventsMonth)
 	// Add the get event endpoints.
-	mux.HandleFunc("/api/get/{id}", s.handleGetEvent)
-	// Add the get/delete event endpoints.
-	mux.HandleFunc("/api/delete/{id}", s.handleDeleteEvent)
+	mux.HandleFunc("GET /api/get/{id}", s.handleGetEvent)
+	// Add the delete event endpoints.
+	mux.HandleFunc("DELETE /api/delete/{id}", s.handleDeleteEvent)
+	// Add the update event endpoints.
+	mux.HandleFunc("PUT /api/update/{id}", s.handleUpdateEvent)
 
 	handler := loggingMiddleware(s.logger)(mux)
 
@@ -122,11 +131,6 @@ func (s *Server) Start(ctx context.Context) error {
 
 // handleCreateEvent handles POST requests to create a new event.
 func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var req CreateEventRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -172,13 +176,8 @@ func (s *Server) handleCreateEvent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// handleListEvents handles GET requests to list all events.
+// handleListEvents handles GET requests to list events linked to a Period.
 func (s *Server) handleListEvents(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	periodStr := r.URL.Query().Get("period")
 	var period storage.Period
 	switch periodStr {
@@ -192,18 +191,47 @@ func (s *Server) handleListEvents(w http.ResponseWriter, r *http.Request) {
 		period = storage.PeriodAll
 	}
 
+	s.handleListEventsWithPeriod(w, r, period)
+}
+
+// handleListEventsDay handles GET requests to list events linked to a Day.
+func (s *Server) handleListEventsDay(w http.ResponseWriter, r *http.Request) {
+	s.handleListEventsWithPeriod(w, r, storage.PeriodDay)
+}
+
+// handleListEventsWeek handles GET requests to list events linked to a Day.
+func (s *Server) handleListEventsWeek(w http.ResponseWriter, r *http.Request) {
+	s.handleListEventsWithPeriod(w, r, storage.PeriodWeek)
+}
+
+// handleListEventsMonth handles GET requests to list events linked to a Day.
+func (s *Server) handleListEventsMonth(w http.ResponseWriter, r *http.Request) {
+	s.handleListEventsWithPeriod(w, r, storage.PeriodMonth)
+}
+
+// shared handler function for listing events.
+func (s *Server) handleListEventsWithPeriod(w http.ResponseWriter, r *http.Request, period storage.Period) {
 	events, err := s.app.ListEvents(r.Context(), period)
 	if err != nil {
-		response := ListEventsResponse{
-			Success: false,
-			Error:   err.Error(),
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response)
+		writeErrorResponse(w, err)
 		return
 	}
+	writeSuccessResponse(w, events)
+}
 
+// return error response on listing events (helper func).
+func writeErrorResponse(w http.ResponseWriter, err error) {
+	response := ListEventsResponse{
+		Success: false,
+		Error:   err.Error(),
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	json.NewEncoder(w).Encode(response)
+}
+
+// return OK response on listing events (helper func).
+func writeSuccessResponse(w http.ResponseWriter, events []storage.Event) {
 	response := ListEventsResponse{
 		Success: true,
 		Events:  events,
@@ -275,6 +303,30 @@ func (s *Server) handleDeleteEvent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// handleUpdateEvent handles PUR requests to update an event by ID.
+func (s *Server) handleUpdateEvent(w http.ResponseWriter, r *http.Request) {
+	var event storage.Event
+	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	idStr := r.PathValue("id")
+	eventID, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid event ID", http.StatusBadRequest)
+		return
+	}
+	event.ID = eventID
+
+	if err := s.app.UpdateEvent(r.Context(), event); err != nil {
+		http.Error(w, "Failed to update event: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func (s *Server) Stop(ctx context.Context) error {
 	if s.httpServer == nil {
 		return nil
@@ -288,5 +340,3 @@ func (s *Server) Stop(ctx context.Context) error {
 	}
 	return err
 }
-
-// TODO

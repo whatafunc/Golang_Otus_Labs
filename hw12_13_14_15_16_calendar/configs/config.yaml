@@ -5,8 +5,8 @@ http:
   listen: ":8081"
 
 storage:
-  type: "postgres" # "memory"  or  "postgres"
+  type: "memory" # "memory"  or  "postgres"
   postgres:
-    dsn: "_use_ENV_" #migration = "migrations"
+    dsn: "host=-----" #migration = "migrations"
 
 migrationsPath: "./migrations"

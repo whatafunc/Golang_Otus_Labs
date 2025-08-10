@@ -190,3 +190,20 @@ func (s *Storage) ClearAll(ctx context.Context) error {
 		return nil
 	}
 }
+
+func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
+	default:
+		if _, ok := s.events[event.ID]; !ok {
+			return fmt.Errorf("event with ID %d not found", event.ID)
+		}
+
+		s.events[event.ID] = event
+		return nil
+	}
+}

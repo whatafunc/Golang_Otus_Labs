@@ -84,6 +84,25 @@ func (f *fakeStorage) DeleteEvent(ctx context.Context, id int) error {
 	return nil
 }
 
+func (f *fakeStorage) UpdateEvent(ctx context.Context, event storage.Event) error {
+	select {
+	case <-ctx.Done():
+		return ErrContextCancel
+	default:
+	}
+
+	if _, exists := f.events[event.ID]; !exists {
+		return ErrNotFound
+	}
+
+	// Only update the title in this simple mock
+	existing := f.events[event.ID]
+	existing.Title = event.Title
+	f.events[event.ID] = existing
+
+	return nil
+}
+
 func TestApp_CreateEvent(t *testing.T) {
 	t.Parallel()
 
