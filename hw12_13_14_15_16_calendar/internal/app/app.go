@@ -26,8 +26,6 @@ func NewWithConfig(cfg config.Config, log *logger.Logger) *App {
 	switch cfg.Storage.Type {
 	case "memory":
 		store = memorystorage.New()
-	// case "redis":
-	// 	store = redisstorage.New(cfg.Storage.Redis)
 	case "postgres":
 		store = postgresstorage.New(cfg.Storage.Postgres)
 	default:
@@ -45,7 +43,8 @@ func NewWithConfig(cfg config.Config, log *logger.Logger) *App {
 type storageInterface interface {
 	CreateEvent(ctx context.Context, event storage.Event) error
 	GetEvent(ctx context.Context, id int) (storage.Event, error)
-	ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error) // Updated
+	ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error)
+	UpdateEvent(ctx context.Context, event storage.Event) error
 	DeleteEvent(ctx context.Context, id int) error
 }
 
@@ -67,4 +66,9 @@ func (a *App) ListEvents(ctx context.Context, period storage.Period) ([]storage.
 // DeleteEvent removes an event from the configured storage.
 func (a *App) DeleteEvent(ctx context.Context, id int) error {
 	return a.store.DeleteEvent(ctx, id)
+}
+
+// UpdateEvent updates an event from the configured storage.
+func (a *App) UpdateEvent(ctx context.Context, event storage.Event) error {
+	return a.store.UpdateEvent(ctx, event)
 }
