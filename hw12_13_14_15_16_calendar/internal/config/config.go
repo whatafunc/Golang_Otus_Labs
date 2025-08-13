@@ -5,6 +5,7 @@ type Config struct {
 	HTTP           HTTPConf      `yaml:"http"`
 	Storage        StorageConfig `yaml:"storage"`
 	MigrationsPath string        `yaml:"migrationsPath"`
+	GRPC           GRPCConfig    `yaml:"grpc"`
 }
 
 type LoggerConf struct {
@@ -22,4 +23,8 @@ type StorageConfig struct {
 
 type PostgresConfig struct {
 	DSN string `yaml:"dsn"`
+}
+
+type GRPCConfig struct {
+	ListenGrpc string `yaml:"listenGrpc"`
 }
