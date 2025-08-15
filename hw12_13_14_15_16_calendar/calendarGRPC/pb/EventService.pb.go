@@ -28,6 +28,10 @@ type Event struct {
 	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	StartTime     string                 `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"` // ISO8601 format
 	EndTime       string                 `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`       // ISO8601 format
+	AllDay        int32                  `protobuf:"varint,6,opt,name=all_day,json=allDay,proto3" json:"all_day,omitempty"`         // 0 or 1
+	Clinic        string                 `protobuf:"bytes,7,opt,name=clinic,proto3" json:"clinic,omitempty"`
+	UserId        int32                  `protobuf:"varint,8,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Service       string                 `protobuf:"bytes,9,opt,name=service,proto3" json:"service,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -93,6 +97,34 @@ func (x *Event) GetStartTime() string {
 func (x *Event) GetEndTime() string {
 	if x != nil {
 		return x.EndTime
+	}
+	return ""
+}
+
+func (x *Event) GetAllDay() int32 {
+	if x != nil {
+		return x.AllDay
+	}
+	return 0
+}
+
+func (x *Event) GetClinic() string {
+	if x != nil {
+		return x.Clinic
+	}
+	return ""
+}
+
+func (x *Event) GetUserId() int32 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *Event) GetService() string {
+	if x != nil {
+		return x.Service
 	}
 	return ""
 }
@@ -239,7 +271,9 @@ func (x *GetEventRequest) GetId() int32 {
 
 type GetEventResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	Event         *Event                 `protobuf:"bytes,2,opt,name=event,proto3" json:"event,omitempty"`
+	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -274,11 +308,25 @@ func (*GetEventResponse) Descriptor() ([]byte, []int) {
 	return file_EventService_proto_rawDescGZIP(), []int{4}
 }
 
+func (x *GetEventResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
 func (x *GetEventResponse) GetEvent() *Event {
 	if x != nil {
 		return x.Event
 	}
 	return nil
+}
+
+func (x *GetEventResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
 }
 
 type ListEventsRequest struct {
@@ -581,23 +629,29 @@ var File_EventService_proto protoreflect.FileDescriptor
 
 const file_EventService_proto_rawDesc = "" +
 	"\n" +
-	"\x12EventService.proto\x12\bcalendar\"\x89\x01\n" +
+	"\x12EventService.proto\x12\bcalendar\"\xed\x01\n" +
 	"\x05Event\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\x04 \x01(\tR\tstartTime\x12\x19\n" +
-	"\bend_time\x18\x05 \x01(\tR\aendTime\";\n" +
+	"\bend_time\x18\x05 \x01(\tR\aendTime\x12\x17\n" +
+	"\aall_day\x18\x06 \x01(\x05R\x06allDay\x12\x16\n" +
+	"\x06clinic\x18\a \x01(\tR\x06clinic\x12\x17\n" +
+	"\auser_id\x18\b \x01(\x05R\x06userId\x12\x18\n" +
+	"\aservice\x18\t \x01(\tR\aservice\";\n" +
 	"\x12CreateEventRequest\x12%\n" +
 	"\x05event\x18\x01 \x01(\v2\x0f.calendar.EventR\x05event\"E\n" +
 	"\x13CreateEventResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\"!\n" +
 	"\x0fGetEventRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"9\n" +
-	"\x10GetEventResponse\x12%\n" +
-	"\x05event\x18\x02 \x01(\v2\x0f.calendar.EventR\x05event\"'\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"i\n" +
+	"\x10GetEventResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12%\n" +
+	"\x05event\x18\x02 \x01(\v2\x0f.calendar.EventR\x05event\x12\x14\n" +
+	"\x05error\x18\x03 \x01(\tR\x05error\"'\n" +
 	"\x11ListEventsRequest\x12\x12\n" +
 	"\x04date\x18\x01 \x01(\tR\x04date\"m\n" +
 	"\x12ListEventsResponse\x12\x18\n" +

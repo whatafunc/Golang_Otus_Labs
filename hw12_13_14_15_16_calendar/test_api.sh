@@ -15,10 +15,10 @@ curl -X POST http://localhost:8081/api/create \
   -H "Content-Type: application/json" \
   -d '{
     "id": 1,
-    "title": "Test Meeting",
+    "title": "Test Meetingdima",
     "description": "This is a test event",
-    "start": "2024-01-15T10:00:00Z",
-    "end": "2024-01-15T11:00:00Z",
+    "start": "2025-08-17T10:00:00Z",
+    "end": "2025-08-15T11:00:00Z",
     "allDay": 0,
     "clinic": "Test Clinic",
     "userId": 123,
