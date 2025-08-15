@@ -103,8 +103,21 @@ func (s *Storage) ListEvents(ctx context.Context, period storage.Period) ([]stor
 			case <-ctx.Done():
 				return nil, fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 			default:
-				if period == storage.PeriodAll || matchesPeriod(*event.Start, now, period) {
+				if period == storage.PeriodAll {
 					result = append(result, event)
+					continue
+				}
+
+				if event.Start == nil {
+					fmt.Printf("[WARN] Skipping event ID %d: no Start time set\n", event.ID)
+					continue
+				}
+
+				if matchesPeriod(*event.Start, now, period) {
+					result = append(result, event)
+				} else {
+					fmt.Printf("[WARN] Skipping event ID %d: Start time %v does not match period %v\n",
+						event.ID, event.Start.Format(time.RFC3339), period)
 				}
 			}
 		}

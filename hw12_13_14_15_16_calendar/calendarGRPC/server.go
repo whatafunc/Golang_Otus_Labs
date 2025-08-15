@@ -2,25 +2,15 @@ package calendarGRPC
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	calendarpb "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/calendarGRPC/pb"
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/app"
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-type Application interface {
-	CreateEvent(ctx context.Context, event storage.Event) error
-	GetEvent(ctx context.Context, id int) (storage.Event, error)
-	ListEventsDay(ctx context.Context, date string) ([]storage.Event, error)
-	ListEventsWeek(ctx context.Context, startDate string) ([]storage.Event, error)
-	ListEventsMonth(ctx context.Context, startDate string) ([]storage.Event, error)
-	UpdateEvent(ctx context.Context, event storage.Event) error
-	DeleteEvent(ctx context.Context, id int) error
-}
 
 type EventServer struct {
 	calendarpb.UnimplementedCalendarServiceServer
@@ -51,18 +41,74 @@ func formatTimePtr(t *time.Time) string {
 	return t.Format(time.RFC3339)
 }
 
-func toProtoEvents(events []storage.Event) []*calendarpb.Event {
-	protoEvents := make([]*calendarpb.Event, len(events))
-	for i, ev := range events {
-		protoEvents[i] = &calendarpb.Event{
-			Id:          int32(ev.ID),
-			Title:       ev.Title,
-			Description: ev.Description,
-			StartTime:   formatTimePtr(ev.Start),
-			EndTime:     formatTimePtr(ev.End),
-		}
+func fromProtoEvent(pe *calendarpb.Event) storage.Event {
+	if pe == nil {
+		return storage.Event{}
 	}
-	return protoEvents
+	return storage.Event{
+		ID:          int(pe.Id),
+		Title:       pe.Title,
+		Description: pe.Description,
+		Start:       parseTimePtr(pe.StartTime),
+		End:         parseTimePtr(pe.EndTime),
+		AllDay:      float64(pe.AllDay),
+		Clinic: func() *string {
+			if pe.Clinic != "" {
+				return &pe.Clinic
+			}
+			return nil
+		}(),
+		UserID: func() *int {
+			if pe.UserId != 0 {
+				uid := int(pe.UserId)
+				return &uid
+			}
+			return nil
+		}(),
+		Service: func() *string {
+			if pe.Service != "" {
+				return &pe.Service
+			}
+			return nil
+		}(),
+	}
+}
+
+func toProtoEvent(ev storage.Event) *calendarpb.Event {
+	return &calendarpb.Event{
+		Id:          int32(ev.ID),
+		Title:       ev.Title,
+		Description: ev.Description,
+		StartTime:   formatTimePtr(ev.Start),
+		EndTime:     formatTimePtr(ev.End),
+		AllDay:      int32(ev.AllDay),
+		Clinic: func() string {
+			if ev.Clinic != nil {
+				return *ev.Clinic
+			}
+			return ""
+		}(),
+		UserId: func() int32 {
+			if ev.UserID != nil {
+				return int32(*ev.UserID)
+			}
+			return 0
+		}(),
+		Service: func() string {
+			if ev.Service != nil {
+				return *ev.Service
+			}
+			return ""
+		}(),
+	}
+}
+
+func toProtoEvents(events []storage.Event) []*calendarpb.Event {
+	result := make([]*calendarpb.Event, len(events))
+	for i, ev := range events {
+		result[i] = toProtoEvent(ev)
+	}
+	return result
 }
 
 // --- RPC Implementations ---
@@ -71,15 +117,7 @@ func (s *EventServer) CreateEvent(ctx context.Context, req *calendarpb.CreateEve
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
-
-	ev := storage.Event{
-		ID:          int(req.Event.Id),
-		Title:       req.Event.Title,
-		Description: req.Event.Description,
-		Start:       parseTimePtr(req.Event.StartTime),
-		End:         parseTimePtr(req.Event.EndTime),
-	}
-	if err := s.application.CreateEvent(ctx, ev); err != nil {
+	if err := s.application.CreateEvent(ctx, fromProtoEvent(req.Event)); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
 	}
 	return &calendarpb.CreateEventResponse{Success: true}, nil
@@ -92,69 +130,82 @@ func (s *EventServer) GetEvent(ctx context.Context, req *calendarpb.GetEventRequ
 
 	ev, err := s.application.GetEvent(ctx, int(req.Id))
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "event not found: %v", err)
+		return &calendarpb.GetEventResponse{
+			Success: false,
+			Event:   &calendarpb.Event{},
+			Error:   fmt.Sprintf("event not found: %v", err),
+		}, nil
 	}
+
 	return &calendarpb.GetEventResponse{
-		Event: &calendarpb.Event{
-			Id:          int32(ev.ID),
-			Title:       ev.Title,
-			Description: ev.Description,
-			StartTime:   formatTimePtr(ev.Start),
-			EndTime:     formatTimePtr(ev.End),
-		},
+		Success: true,
+		Event:   toProtoEvent(ev),
 	}, nil
 }
 
-// func (s *EventServer) ListEventsDay(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
-// 	if s.application == nil {
-// 		return nil, status.Error(codes.Internal, "application is not initialized")
-// 	}
+func (s *EventServer) ListEventsDay(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
+	if s.application == nil {
+		return nil, status.Error(codes.Internal, "application is not initialized")
+	}
 
-// 	events, err := s.application.ListEventsDay(ctx, req.Date)
-// 	if err != nil {
-// 		return nil, status.Errorf(codes.Internal, "failed to list day events: %v", err)
-// 	}
-// 	return &calendarpb.ListEventsResponse{Events: toProtoEvents(events)}, nil
-// }
+	events, err := s.application.ListEvents(ctx, storage.PeriodDay)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list events for the day: %v", err)
+	}
 
-// func (s *EventServer) ListEventsWeek(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
-// 	if s.application == nil {
-// 		return nil, status.Error(codes.Internal, "application is not initialized")
-// 	}
+	return &calendarpb.ListEventsResponse{
+		Success: true,
+		Events:  toProtoEvents(events),
+	}, nil
+}
 
-// 	events, err := s.application.ListEventsWeek(ctx, req.Date)
-// 	if err != nil {
-// 		return nil, status.Errorf(codes.Internal, "failed to list week events: %v", err)
-// 	}
-// 	return &calendarpb.ListEventsResponse{Events: toProtoEvents(events)}, nil
-// }
+func (s *EventServer) ListEventsWeek(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
+	if s.application == nil {
+		return nil, status.Error(codes.Internal, "application is not initialized")
+	}
 
-// func (s *EventServer) ListEventsMonth(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
-// 	if s.application == nil {
-// 		return nil, status.Error(codes.Internal, "application is not initialized")
-// 	}
+	events, err := s.application.ListEvents(ctx, storage.PeriodWeek)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list events for the week: %v", err)
+	}
 
-// 	events, err := s.application.ListEventsMonth(ctx, req.Date)
-// 	if err != nil {
-// 		return nil, status.Errorf(codes.Internal, "failed to list month events: %v", err)
-// 	}
-// 	return &calendarpb.ListEventsResponse{Events: toProtoEvents(events)}, nil
-// }
+	return &calendarpb.ListEventsResponse{
+		Success: true,
+		Events:  toProtoEvents(events),
+	}, nil
+}
+
+func (s *EventServer) ListEventsMonth(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
+	if s.application == nil {
+		return nil, status.Error(codes.Internal, "application is not initialized")
+	}
+
+	events, err := s.application.ListEvents(ctx, storage.PeriodMonth)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list events for the Month: %v", err)
+	}
+
+	return &calendarpb.ListEventsResponse{
+		Success: true,
+		Events:  toProtoEvents(events),
+	}, nil
+}
 
 func (s *EventServer) UpdateEvent(ctx context.Context, req *calendarpb.UpdateEventRequest) (*calendarpb.UpdateEventResponse, error) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
-
-	ev := storage.Event{
-		ID:          int(req.Event.Id),
-		Title:       req.Event.Title,
-		Description: req.Event.Description,
-		Start:       parseTimePtr(req.Event.StartTime),
-		End:         parseTimePtr(req.Event.EndTime),
+	if req.Event == nil {
+		return &calendarpb.UpdateEventResponse{
+			Success: false,
+			Error:   "no event data provided",
+		}, nil
 	}
-	if err := s.application.UpdateEvent(ctx, ev); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to update event: %v", err)
+	if err := s.application.UpdateEvent(ctx, fromProtoEvent(req.Event)); err != nil {
+		return &calendarpb.UpdateEventResponse{
+			Success: false,
+			Error:   fmt.Sprintf("event not found: %v", err),
+		}, nil
 	}
 	return &calendarpb.UpdateEventResponse{Success: true}, nil
 }
@@ -163,9 +214,11 @@ func (s *EventServer) DeleteEvent(ctx context.Context, req *calendarpb.DeleteEve
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
-
 	if err := s.application.DeleteEvent(ctx, int(req.Id)); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to delete event: %v", err)
+		return &calendarpb.DeleteEventResponse{
+			Success: false,
+			Error:   fmt.Sprintf("event not found: %v", err),
+		}, nil
 	}
 	return &calendarpb.DeleteEventResponse{Success: true}, nil
 }

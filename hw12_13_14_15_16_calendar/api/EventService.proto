@@ -16,6 +16,10 @@ message Event {
   string description = 3;
   string start_time = 4; // ISO8601 format
   string end_time = 5;   // ISO8601 format
+  int32 all_day = 6;     // 0 or 1
+  string clinic = 7;
+  int32 user_id = 8;
+  string service = 9;
 }
 
 message CreateEventRequest {
@@ -32,7 +36,9 @@ message GetEventRequest {
 }
 
 message GetEventResponse {
+  bool success = 1;
   Event event = 2;
+  string error = 3;
 }
 
 message ListEventsRequest {
