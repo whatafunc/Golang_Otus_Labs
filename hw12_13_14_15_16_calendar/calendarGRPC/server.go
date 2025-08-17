@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	calendarpb "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/calendarGRPC/pb"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/app"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
+	calendarpb "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/calendarGRPC/pb"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/app"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type EventServer struct {
@@ -49,28 +51,23 @@ func fromProtoEvent(pe *calendarpb.Event) storage.Event {
 		ID:          int(pe.Id),
 		Title:       pe.Title,
 		Description: pe.Description,
-		Start:       parseTimePtr(pe.StartTime),
-		End:         parseTimePtr(pe.EndTime),
-		AllDay:      float64(pe.AllDay),
-		Clinic: func() *string {
-			if pe.Clinic != "" {
-				return &pe.Clinic
+		Start:       parseTimePtr(pe.Start),
+		End:         parseTimePtr(pe.End),
+		AllDay: func() float64 {
+			if pe.AllDay {
+				return 1
 			}
-			return nil
+			return 0
 		}(),
+		Clinic: &pe.Clinic,
 		UserID: func() *int {
-			if pe.UserId != 0 {
-				uid := int(pe.UserId)
-				return &uid
+			if pe.UserId == 0 {
+				return nil
 			}
-			return nil
+			uid := int(pe.UserId)
+			return &uid
 		}(),
-		Service: func() *string {
-			if pe.Service != "" {
-				return &pe.Service
-			}
-			return nil
-		}(),
+		Service: &pe.Service,
 	}
 }
 
@@ -79,9 +76,9 @@ func toProtoEvent(ev storage.Event) *calendarpb.Event {
 		Id:          int32(ev.ID),
 		Title:       ev.Title,
 		Description: ev.Description,
-		StartTime:   formatTimePtr(ev.Start),
-		EndTime:     formatTimePtr(ev.End),
-		AllDay:      int32(ev.AllDay),
+		Start:       formatTimePtr(ev.Start),
+		End:         formatTimePtr(ev.End),
+		AllDay:      ev.AllDay != 0,
 		Clinic: func() string {
 			if ev.Clinic != nil {
 				return *ev.Clinic
@@ -111,6 +108,13 @@ func toProtoEvents(events []storage.Event) []*calendarpb.Event {
 	return result
 }
 
+// Stub for period constants needed for filtering events
+const (
+	PeriodDay = iota
+	PeriodWeek
+	PeriodMonth
+)
+
 // --- RPC Implementations ---
 
 func (s *EventServer) CreateEvent(ctx context.Context, req *calendarpb.CreateEventRequest) (*calendarpb.CreateEventResponse, error) {
@@ -131,19 +135,17 @@ func (s *EventServer) GetEvent(ctx context.Context, req *calendarpb.GetEventRequ
 	ev, err := s.application.GetEvent(ctx, int(req.Id))
 	if err != nil {
 		return &calendarpb.GetEventResponse{
-			Success: false,
-			Event:   &calendarpb.Event{},
-			Error:   fmt.Sprintf("event not found: %v", err),
+			Event: &calendarpb.Event{},
+			Error: fmt.Sprintf("event not found: %v", err),
 		}, nil
 	}
 
 	return &calendarpb.GetEventResponse{
-		Success: true,
-		Event:   toProtoEvent(ev),
+		Event: toProtoEvent(ev),
 	}, nil
 }
 
-func (s *EventServer) ListEventsDay(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
+func (s *EventServer) ListEventsDay(ctx context.Context, req *emptypb.Empty) (*calendarpb.ListEventsResponse, error) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
@@ -154,12 +156,11 @@ func (s *EventServer) ListEventsDay(ctx context.Context, req *calendarpb.ListEve
 	}
 
 	return &calendarpb.ListEventsResponse{
-		Success: true,
-		Events:  toProtoEvents(events),
+		Events: toProtoEvents(events),
 	}, nil
 }
 
-func (s *EventServer) ListEventsWeek(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
+func (s *EventServer) ListEventsWeek(ctx context.Context, req *emptypb.Empty) (*calendarpb.ListEventsResponse, error) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
@@ -170,24 +171,22 @@ func (s *EventServer) ListEventsWeek(ctx context.Context, req *calendarpb.ListEv
 	}
 
 	return &calendarpb.ListEventsResponse{
-		Success: true,
-		Events:  toProtoEvents(events),
+		Events: toProtoEvents(events),
 	}, nil
 }
 
-func (s *EventServer) ListEventsMonth(ctx context.Context, req *calendarpb.ListEventsRequest) (*calendarpb.ListEventsResponse, error) {
+func (s *EventServer) ListEventsMonth(ctx context.Context, req *emptypb.Empty) (*calendarpb.ListEventsResponse, error) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
 
 	events, err := s.application.ListEvents(ctx, storage.PeriodMonth)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to list events for the Month: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to list events for the month: %v", err)
 	}
 
 	return &calendarpb.ListEventsResponse{
-		Success: true,
-		Events:  toProtoEvents(events),
+		Events: toProtoEvents(events),
 	}, nil
 }
 
@@ -204,7 +203,7 @@ func (s *EventServer) UpdateEvent(ctx context.Context, req *calendarpb.UpdateEve
 	if err := s.application.UpdateEvent(ctx, fromProtoEvent(req.Event)); err != nil {
 		return &calendarpb.UpdateEventResponse{
 			Success: false,
-			Error:   fmt.Sprintf("event not found: %v", err),
+			Error:   fmt.Sprintf("failed to update event: %v", err),
 		}, nil
 	}
 	return &calendarpb.UpdateEventResponse{Success: true}, nil
@@ -217,7 +216,7 @@ func (s *EventServer) DeleteEvent(ctx context.Context, req *calendarpb.DeleteEve
 	if err := s.application.DeleteEvent(ctx, int(req.Id)); err != nil {
 		return &calendarpb.DeleteEventResponse{
 			Success: false,
-			Error:   fmt.Sprintf("event not found: %v", err),
+			Error:   fmt.Sprintf("failed to delete event: %v", err),
 		}, nil
 	}
 	return &calendarpb.DeleteEventResponse{Success: true}, nil

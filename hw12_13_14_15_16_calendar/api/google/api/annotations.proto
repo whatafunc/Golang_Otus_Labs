@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package google.api;
+
+import "google/api/http.proto";
+
+option go_package = "google.golang.org/genproto/googleapis/api/annotations;annotations";
+
+extend google.protobuf.MethodOptions {
+  // See https://cloud.google.com/service-management/reference/rpc/google.api#http
+  HttpRule http = 72295728;
+}

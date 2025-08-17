@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
 )
 
 var ErrNotFound = errors.New("event not found")

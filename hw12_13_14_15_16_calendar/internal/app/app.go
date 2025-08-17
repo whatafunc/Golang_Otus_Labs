@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/logger"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
-	memorystorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/memory"
-	postgresstorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/sql"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/logger"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
+	memorystorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage/memory"
+	postgresstorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage/sql"
 )
 
 // App is the main application structure.

@@ -15,10 +15,10 @@ import (
 	"github.com/pressly/goose/v3" //nolint:depguard // allowed as per our webinars
 
 	//nolint:depguard // allowed for test config loading
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
 
 	//nolint:depguard // allowed for test config loading
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
 
 	//nolint:depguard // allowed for test config loading
 	"gopkg.in/yaml.v3"
