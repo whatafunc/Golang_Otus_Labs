@@ -1,11 +1,13 @@
-module github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar
+module github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar
 
 go 1.23.0
 
 toolchain go1.24.5
 
 require (
-	google.golang.org/protobuf v1.36.6
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20250811230008-5f3141c8851a
+	google.golang.org/protobuf v1.36.7
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -14,7 +16,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b // indirect
 )
 
 require (
@@ -32,7 +34,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
 	google.golang.org/grpc v1.74.2
 )

@@ -8,8 +8,8 @@ grpc:
   listenGrpc: ":50051"
 
 storage:
-  type: "postgres" # "memory"  or  "postgres"
+  type: "memory" # "memory"  or  "postgres"
   postgres:
-    dsn: "host=acs_modx303.cozymods.com user=otus_user1 password=otus_password1 dbname=events sslmode=disable" #migration = "migrations"
+    dsn: "----" #migration = "migrations"
 
 migrationsPath: "./migrations"

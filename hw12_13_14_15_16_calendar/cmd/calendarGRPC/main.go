@@ -1,16 +1,21 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/calendarGRPC"
-	calendarpb "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/calendarGRPC/pb"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/app"
-
-	//"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/logger"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/calendarGRPC"
+	calendarpb "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/calendarGRPC/pb"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/app"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -18,7 +23,7 @@ import (
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "/etc/calendar/config.yaml", "Path to config file")
 }
 
 func main() {
@@ -26,22 +31,62 @@ func main() {
 
 	cfg, err := LoadConfig(configFile)
 	if err != nil {
-		panic("failed to load config: " + err.Error())
+		log.Fatalf("Error loading config: %v", err)
 	}
+
 	logg := logger.New(cfg.Logger.Level)
-	application := app.NewWithConfig(cfg, logg)
 
-	lis, err := net.Listen("tcp", cfg.GRPC.ListenGrpc)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
+	appInstance := app.NewWithConfig(cfg, logg)
 
-	grpcSrv := grpc.NewServer()
-	calendarpb.RegisterCalendarServiceServer(grpcSrv, calendarGRPC.NewEventServer(application))
-	// Enable reflection so grpcurl/Postman can inspect services
-	reflection.Register(grpcSrv)
-	log.Printf("gRPC server listening on %s", cfg.GRPC.ListenGrpc)
-	if err := grpcSrv.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	grpcAddr := cfg.GRPC.ListenGrpc
+	httpAddr := cfg.HTTP.Listen
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Start gRPC server
+	go func() {
+		lis, err := net.Listen("tcp", grpcAddr)
+		if err != nil {
+			logg.Error("failed to listen for gRPC: " + err.Error())
+			cancel()
+			return
+		}
+
+		grpcServer := grpc.NewServer()
+		eventServer := calendarGRPC.NewEventServer(appInstance)
+		calendarpb.RegisterCalendarServiceServer(grpcServer, eventServer)
+		reflection.Register(grpcServer)
+
+		logg.Info("gRPC server listening on " + grpcAddr)
+		if err := grpcServer.Serve(lis); err != nil {
+			logg.Error("failed to serve gRPC: " + err.Error())
+		}
+	}()
+
+	// Start HTTP gateway server
+	go func() {
+		mux := runtime.NewServeMux()
+		opts := []grpc.DialOption{grpc.WithInsecure()} // Use secure options for prod
+
+		if err := calendarpb.RegisterCalendarServiceHandlerFromEndpoint(ctx, mux, grpcAddr, opts); err != nil {
+			logg.Error("failed to start HTTP gateway: " + err.Error())
+			cancel()
+			return
+		}
+
+		logg.Info("HTTP gateway listening on " + httpAddr)
+		if err := http.ListenAndServe(httpAddr, mux); err != nil {
+			logg.Error("failed to serve HTTP: " + err.Error())
+		}
+	}()
+
+	// Gracefully handle termination signals
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	<-sigCh
+	logg.Info("Shutdown signal received, exiting")
+	cancel()
+	time.Sleep(time.Second) // Wait briefly for cleanup if needed
 }

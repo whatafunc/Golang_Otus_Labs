@@ -1,25 +1,77 @@
 syntax = "proto3";
 
-package calendar;
+package calendarGRPC;
 
 option go_package = "calendarGRPC/pb;pb";
-//option go_package = "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/calendarGRPC/pb;pb";
 
+// Local imports for grpc-gateway HTTP annotations and Empty
+// import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/descriptor.proto";
+import "google/api/http.proto";
 
-// ====================
-// Messages
-// ====================
+// Service definition
+service CalendarService {
+  rpc HealthCheck(google.protobuf.Empty) returns (HealthResponse) {
+    option (google.api.http) = {
+      get: "/health"
+    };
+  }
 
-message Event {
-  int32 id = 1;
-  string title = 2;
-  string description = 3;
-  string start_time = 4; // ISO8601 format
-  string end_time = 5;   // ISO8601 format
-  int32 all_day = 6;     // 0 or 1
-  string clinic = 7;
-  int32 user_id = 8;
-  string service = 9;
+  rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse) {
+    option (google.api.http) = {
+      post: "/api/create"
+      body: "*"
+    };
+  }
+
+  rpc ListEvents(google.protobuf.Empty) returns (ListEventsResponse) {
+    option (google.api.http) = {
+      get: "/api/events"
+    };
+  }
+
+  rpc ListEventsDay(google.protobuf.Empty) returns (ListEventsResponse) {
+    option (google.api.http) = {
+      get: "/api/eventsDay"
+    };
+  }
+
+  rpc ListEventsWeek(google.protobuf.Empty) returns (ListEventsResponse) {
+    option (google.api.http) = {
+      get: "/api/eventsWeek"
+    };
+  }
+
+  rpc ListEventsMonth(google.protobuf.Empty) returns (ListEventsResponse) {
+    option (google.api.http) = {
+      get: "/api/eventsMonth"
+    };
+  }
+
+  rpc GetEvent(GetEventRequest) returns (GetEventResponse) {
+    option (google.api.http) = {
+      get: "/api/get/{id}"
+    };
+  }
+
+  rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse) {
+    option (google.api.http) = {
+      delete: "/api/delete/{id}"
+    };
+  }
+
+  rpc UpdateEvent(UpdateEventRequest) returns (UpdateEventResponse) {
+    option (google.api.http) = {
+      put: "/api/update/{event.id}"
+      body: "*"
+    };
+  }
+}
+
+// ====== Messages ======
+message HealthResponse {
+  string status = 1;
 }
 
 message CreateEventRequest {
@@ -31,32 +83,16 @@ message CreateEventResponse {
   string error = 2;
 }
 
+message ListEventsResponse {
+  repeated Event events = 1;
+}
+
 message GetEventRequest {
   int32 id = 1;
 }
 
 message GetEventResponse {
-  bool success = 1;
-  Event event = 2;
-  string error = 3;
-}
-
-message ListEventsRequest {
-  string date = 1; // YYYY-MM-DD
-}
-
-message ListEventsResponse {
-  bool success = 1;
-  repeated Event events = 2;
-  string error = 3;
-}
-
-message UpdateEventRequest {
   Event event = 1;
-}
-
-message UpdateEventResponse {
-  bool success = 1;
   string error = 2;
 }
 
@@ -69,18 +105,24 @@ message DeleteEventResponse {
   string error = 2;
 }
 
-// ====================
-// Service
-// ====================
+message UpdateEventRequest {
+  Event event = 1;
+}
 
-service CalendarService {
-  rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
-  rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+message UpdateEventResponse {
+  bool success = 1;
+  string error = 2;
+}
 
-  rpc ListEventsDay(ListEventsRequest) returns (ListEventsResponse);
-  rpc ListEventsWeek(ListEventsRequest) returns (ListEventsResponse);
-  rpc ListEventsMonth(ListEventsRequest) returns (ListEventsResponse);
-
-  rpc UpdateEvent(UpdateEventRequest) returns (UpdateEventResponse);
-  rpc DeleteEvent(DeleteEventRequest) returns (DeleteEventResponse);
+// ====== Event ======
+message Event {
+  int32 id = 1;
+  string title = 2;
+  string description = 3;
+  string start = 4;   // ISO8601 datetime
+  string end = 5;     // optional
+  bool allDay = 6;
+  string clinic = 7;
+  int32 userId = 8;
+  string service = 9;
 }

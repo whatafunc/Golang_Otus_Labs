@@ -7,8 +7,11 @@
 package pb
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	_ "google.golang.org/protobuf/types/descriptorpb"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -21,35 +24,28 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Event struct {
+// ====== Messages ======
+type HealthResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	StartTime     string                 `protobuf:"bytes,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"` // ISO8601 format
-	EndTime       string                 `protobuf:"bytes,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`       // ISO8601 format
-	AllDay        int32                  `protobuf:"varint,6,opt,name=all_day,json=allDay,proto3" json:"all_day,omitempty"`         // 0 or 1
-	Clinic        string                 `protobuf:"bytes,7,opt,name=clinic,proto3" json:"clinic,omitempty"`
-	UserId        int32                  `protobuf:"varint,8,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	Service       string                 `protobuf:"bytes,9,opt,name=service,proto3" json:"service,omitempty"`
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Event) Reset() {
-	*x = Event{}
+func (x *HealthResponse) Reset() {
+	*x = HealthResponse{}
 	mi := &file_EventService_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Event) String() string {
+func (x *HealthResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Event) ProtoMessage() {}
+func (*HealthResponse) ProtoMessage() {}
 
-func (x *Event) ProtoReflect() protoreflect.Message {
+func (x *HealthResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_EventService_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -61,70 +57,14 @@ func (x *Event) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Event.ProtoReflect.Descriptor instead.
-func (*Event) Descriptor() ([]byte, []int) {
+// Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
+func (*HealthResponse) Descriptor() ([]byte, []int) {
 	return file_EventService_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Event) GetId() int32 {
+func (x *HealthResponse) GetStatus() string {
 	if x != nil {
-		return x.Id
-	}
-	return 0
-}
-
-func (x *Event) GetTitle() string {
-	if x != nil {
-		return x.Title
-	}
-	return ""
-}
-
-func (x *Event) GetDescription() string {
-	if x != nil {
-		return x.Description
-	}
-	return ""
-}
-
-func (x *Event) GetStartTime() string {
-	if x != nil {
-		return x.StartTime
-	}
-	return ""
-}
-
-func (x *Event) GetEndTime() string {
-	if x != nil {
-		return x.EndTime
-	}
-	return ""
-}
-
-func (x *Event) GetAllDay() int32 {
-	if x != nil {
-		return x.AllDay
-	}
-	return 0
-}
-
-func (x *Event) GetClinic() string {
-	if x != nil {
-		return x.Clinic
-	}
-	return ""
-}
-
-func (x *Event) GetUserId() int32 {
-	if x != nil {
-		return x.UserId
-	}
-	return 0
-}
-
-func (x *Event) GetService() string {
-	if x != nil {
-		return x.Service
+		return x.Status
 	}
 	return ""
 }
@@ -225,6 +165,50 @@ func (x *CreateEventResponse) GetError() string {
 	return ""
 }
 
+type ListEventsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Events        []*Event               `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListEventsResponse) Reset() {
+	*x = ListEventsResponse{}
+	mi := &file_EventService_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListEventsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListEventsResponse) ProtoMessage() {}
+
+func (x *ListEventsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_EventService_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListEventsResponse.ProtoReflect.Descriptor instead.
+func (*ListEventsResponse) Descriptor() ([]byte, []int) {
+	return file_EventService_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ListEventsResponse) GetEvents() []*Event {
+	if x != nil {
+		return x.Events
+	}
+	return nil
+}
+
 type GetEventRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -234,7 +218,7 @@ type GetEventRequest struct {
 
 func (x *GetEventRequest) Reset() {
 	*x = GetEventRequest{}
-	mi := &file_EventService_proto_msgTypes[3]
+	mi := &file_EventService_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -246,7 +230,7 @@ func (x *GetEventRequest) String() string {
 func (*GetEventRequest) ProtoMessage() {}
 
 func (x *GetEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_EventService_proto_msgTypes[3]
+	mi := &file_EventService_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -259,7 +243,7 @@ func (x *GetEventRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEventRequest.ProtoReflect.Descriptor instead.
 func (*GetEventRequest) Descriptor() ([]byte, []int) {
-	return file_EventService_proto_rawDescGZIP(), []int{3}
+	return file_EventService_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetEventRequest) GetId() int32 {
@@ -271,16 +255,15 @@ func (x *GetEventRequest) GetId() int32 {
 
 type GetEventResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Event         *Event                 `protobuf:"bytes,2,opt,name=event,proto3" json:"event,omitempty"`
-	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	Event         *Event                 `protobuf:"bytes,1,opt,name=event,proto3" json:"event,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetEventResponse) Reset() {
 	*x = GetEventResponse{}
-	mi := &file_EventService_proto_msgTypes[4]
+	mi := &file_EventService_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -292,7 +275,7 @@ func (x *GetEventResponse) String() string {
 func (*GetEventResponse) ProtoMessage() {}
 
 func (x *GetEventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_EventService_proto_msgTypes[4]
+	mi := &file_EventService_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -305,14 +288,7 @@ func (x *GetEventResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEventResponse.ProtoReflect.Descriptor instead.
 func (*GetEventResponse) Descriptor() ([]byte, []int) {
-	return file_EventService_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *GetEventResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
+	return file_EventService_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetEventResponse) GetEvent() *Event {
@@ -329,206 +305,6 @@ func (x *GetEventResponse) GetError() string {
 	return ""
 }
 
-type ListEventsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"` // YYYY-MM-DD
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListEventsRequest) Reset() {
-	*x = ListEventsRequest{}
-	mi := &file_EventService_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListEventsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListEventsRequest) ProtoMessage() {}
-
-func (x *ListEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_EventService_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListEventsRequest.ProtoReflect.Descriptor instead.
-func (*ListEventsRequest) Descriptor() ([]byte, []int) {
-	return file_EventService_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *ListEventsRequest) GetDate() string {
-	if x != nil {
-		return x.Date
-	}
-	return ""
-}
-
-type ListEventsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Events        []*Event               `protobuf:"bytes,2,rep,name=events,proto3" json:"events,omitempty"`
-	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListEventsResponse) Reset() {
-	*x = ListEventsResponse{}
-	mi := &file_EventService_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListEventsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListEventsResponse) ProtoMessage() {}
-
-func (x *ListEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_EventService_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListEventsResponse.ProtoReflect.Descriptor instead.
-func (*ListEventsResponse) Descriptor() ([]byte, []int) {
-	return file_EventService_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *ListEventsResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *ListEventsResponse) GetEvents() []*Event {
-	if x != nil {
-		return x.Events
-	}
-	return nil
-}
-
-func (x *ListEventsResponse) GetError() string {
-	if x != nil {
-		return x.Error
-	}
-	return ""
-}
-
-type UpdateEventRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Event         *Event                 `protobuf:"bytes,1,opt,name=event,proto3" json:"event,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateEventRequest) Reset() {
-	*x = UpdateEventRequest{}
-	mi := &file_EventService_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateEventRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateEventRequest) ProtoMessage() {}
-
-func (x *UpdateEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_EventService_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateEventRequest.ProtoReflect.Descriptor instead.
-func (*UpdateEventRequest) Descriptor() ([]byte, []int) {
-	return file_EventService_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *UpdateEventRequest) GetEvent() *Event {
-	if x != nil {
-		return x.Event
-	}
-	return nil
-}
-
-type UpdateEventResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UpdateEventResponse) Reset() {
-	*x = UpdateEventResponse{}
-	mi := &file_EventService_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UpdateEventResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UpdateEventResponse) ProtoMessage() {}
-
-func (x *UpdateEventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_EventService_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UpdateEventResponse.ProtoReflect.Descriptor instead.
-func (*UpdateEventResponse) Descriptor() ([]byte, []int) {
-	return file_EventService_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *UpdateEventResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *UpdateEventResponse) GetError() string {
-	if x != nil {
-		return x.Error
-	}
-	return ""
-}
-
 type DeleteEventRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -538,7 +314,7 @@ type DeleteEventRequest struct {
 
 func (x *DeleteEventRequest) Reset() {
 	*x = DeleteEventRequest{}
-	mi := &file_EventService_proto_msgTypes[9]
+	mi := &file_EventService_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -550,7 +326,7 @@ func (x *DeleteEventRequest) String() string {
 func (*DeleteEventRequest) ProtoMessage() {}
 
 func (x *DeleteEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_EventService_proto_msgTypes[9]
+	mi := &file_EventService_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -563,7 +339,7 @@ func (x *DeleteEventRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteEventRequest.ProtoReflect.Descriptor instead.
 func (*DeleteEventRequest) Descriptor() ([]byte, []int) {
-	return file_EventService_proto_rawDescGZIP(), []int{9}
+	return file_EventService_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *DeleteEventRequest) GetId() int32 {
@@ -583,7 +359,7 @@ type DeleteEventResponse struct {
 
 func (x *DeleteEventResponse) Reset() {
 	*x = DeleteEventResponse{}
-	mi := &file_EventService_proto_msgTypes[10]
+	mi := &file_EventService_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -595,7 +371,7 @@ func (x *DeleteEventResponse) String() string {
 func (*DeleteEventResponse) ProtoMessage() {}
 
 func (x *DeleteEventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_EventService_proto_msgTypes[10]
+	mi := &file_EventService_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -608,7 +384,7 @@ func (x *DeleteEventResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteEventResponse.ProtoReflect.Descriptor instead.
 func (*DeleteEventResponse) Descriptor() ([]byte, []int) {
-	return file_EventService_proto_rawDescGZIP(), []int{10}
+	return file_EventService_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeleteEventResponse) GetSuccess() bool {
@@ -625,57 +401,261 @@ func (x *DeleteEventResponse) GetError() string {
 	return ""
 }
 
+type UpdateEventRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Event         *Event                 `protobuf:"bytes,1,opt,name=event,proto3" json:"event,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateEventRequest) Reset() {
+	*x = UpdateEventRequest{}
+	mi := &file_EventService_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateEventRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateEventRequest) ProtoMessage() {}
+
+func (x *UpdateEventRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_EventService_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateEventRequest.ProtoReflect.Descriptor instead.
+func (*UpdateEventRequest) Descriptor() ([]byte, []int) {
+	return file_EventService_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UpdateEventRequest) GetEvent() *Event {
+	if x != nil {
+		return x.Event
+	}
+	return nil
+}
+
+type UpdateEventResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateEventResponse) Reset() {
+	*x = UpdateEventResponse{}
+	mi := &file_EventService_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateEventResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateEventResponse) ProtoMessage() {}
+
+func (x *UpdateEventResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_EventService_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateEventResponse.ProtoReflect.Descriptor instead.
+func (*UpdateEventResponse) Descriptor() ([]byte, []int) {
+	return file_EventService_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *UpdateEventResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *UpdateEventResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+// ====== Event ======
+type Event struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Start         string                 `protobuf:"bytes,4,opt,name=start,proto3" json:"start,omitempty"` // ISO8601 datetime
+	End           string                 `protobuf:"bytes,5,opt,name=end,proto3" json:"end,omitempty"`     // optional
+	AllDay        bool                   `protobuf:"varint,6,opt,name=allDay,proto3" json:"allDay,omitempty"`
+	Clinic        string                 `protobuf:"bytes,7,opt,name=clinic,proto3" json:"clinic,omitempty"`
+	UserId        int32                  `protobuf:"varint,8,opt,name=userId,proto3" json:"userId,omitempty"`
+	Service       string                 `protobuf:"bytes,9,opt,name=service,proto3" json:"service,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Event) Reset() {
+	*x = Event{}
+	mi := &file_EventService_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Event) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Event) ProtoMessage() {}
+
+func (x *Event) ProtoReflect() protoreflect.Message {
+	mi := &file_EventService_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Event.ProtoReflect.Descriptor instead.
+func (*Event) Descriptor() ([]byte, []int) {
+	return file_EventService_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *Event) GetId() int32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Event) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *Event) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *Event) GetStart() string {
+	if x != nil {
+		return x.Start
+	}
+	return ""
+}
+
+func (x *Event) GetEnd() string {
+	if x != nil {
+		return x.End
+	}
+	return ""
+}
+
+func (x *Event) GetAllDay() bool {
+	if x != nil {
+		return x.AllDay
+	}
+	return false
+}
+
+func (x *Event) GetClinic() string {
+	if x != nil {
+		return x.Clinic
+	}
+	return ""
+}
+
+func (x *Event) GetUserId() int32 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *Event) GetService() string {
+	if x != nil {
+		return x.Service
+	}
+	return ""
+}
+
 var File_EventService_proto protoreflect.FileDescriptor
 
 const file_EventService_proto_rawDesc = "" +
 	"\n" +
-	"\x12EventService.proto\x12\bcalendar\"\xed\x01\n" +
-	"\x05Event\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x14\n" +
-	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1d\n" +
-	"\n" +
-	"start_time\x18\x04 \x01(\tR\tstartTime\x12\x19\n" +
-	"\bend_time\x18\x05 \x01(\tR\aendTime\x12\x17\n" +
-	"\aall_day\x18\x06 \x01(\x05R\x06allDay\x12\x16\n" +
-	"\x06clinic\x18\a \x01(\tR\x06clinic\x12\x17\n" +
-	"\auser_id\x18\b \x01(\x05R\x06userId\x12\x18\n" +
-	"\aservice\x18\t \x01(\tR\aservice\";\n" +
-	"\x12CreateEventRequest\x12%\n" +
-	"\x05event\x18\x01 \x01(\v2\x0f.calendar.EventR\x05event\"E\n" +
+	"\x12EventService.proto\x12\fcalendarGRPC\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/descriptor.proto\x1a\x15google/api/http.proto\"(\n" +
+	"\x0eHealthResponse\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\"?\n" +
+	"\x12CreateEventRequest\x12)\n" +
+	"\x05event\x18\x01 \x01(\v2\x13.calendarGRPC.EventR\x05event\"E\n" +
 	"\x13CreateEventResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05error\"!\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"A\n" +
+	"\x12ListEventsResponse\x12+\n" +
+	"\x06events\x18\x01 \x03(\v2\x13.calendarGRPC.EventR\x06events\"!\n" +
 	"\x0fGetEventRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x05R\x02id\"i\n" +
-	"\x10GetEventResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12%\n" +
-	"\x05event\x18\x02 \x01(\v2\x0f.calendar.EventR\x05event\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\"'\n" +
-	"\x11ListEventsRequest\x12\x12\n" +
-	"\x04date\x18\x01 \x01(\tR\x04date\"m\n" +
-	"\x12ListEventsResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12'\n" +
-	"\x06events\x18\x02 \x03(\v2\x0f.calendar.EventR\x06events\x12\x14\n" +
-	"\x05error\x18\x03 \x01(\tR\x05error\";\n" +
-	"\x12UpdateEventRequest\x12%\n" +
-	"\x05event\x18\x01 \x01(\v2\x0f.calendar.EventR\x05event\"E\n" +
-	"\x13UpdateEventResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\"S\n" +
+	"\x10GetEventResponse\x12)\n" +
+	"\x05event\x18\x01 \x01(\v2\x13.calendarGRPC.EventR\x05event\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\"$\n" +
 	"\x12DeleteEventRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\"E\n" +
 	"\x13DeleteEventResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05error2\x9f\x04\n" +
-	"\x0fCalendarService\x12J\n" +
-	"\vCreateEvent\x12\x1c.calendar.CreateEventRequest\x1a\x1d.calendar.CreateEventResponse\x12A\n" +
-	"\bGetEvent\x12\x19.calendar.GetEventRequest\x1a\x1a.calendar.GetEventResponse\x12J\n" +
-	"\rListEventsDay\x12\x1b.calendar.ListEventsRequest\x1a\x1c.calendar.ListEventsResponse\x12K\n" +
-	"\x0eListEventsWeek\x12\x1b.calendar.ListEventsRequest\x1a\x1c.calendar.ListEventsResponse\x12L\n" +
-	"\x0fListEventsMonth\x12\x1b.calendar.ListEventsRequest\x1a\x1c.calendar.ListEventsResponse\x12J\n" +
-	"\vUpdateEvent\x12\x1c.calendar.UpdateEventRequest\x1a\x1d.calendar.UpdateEventResponse\x12J\n" +
-	"\vDeleteEvent\x12\x1c.calendar.DeleteEventRequest\x1a\x1d.calendar.DeleteEventResponseB\x14Z\x12calendarGRPC/pb;pbb\x06proto3"
+	"\x05error\x18\x02 \x01(\tR\x05error\"?\n" +
+	"\x12UpdateEventRequest\x12)\n" +
+	"\x05event\x18\x01 \x01(\v2\x13.calendarGRPC.EventR\x05event\"E\n" +
+	"\x13UpdateEventResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"\xd9\x01\n" +
+	"\x05Event\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
+	"\x05start\x18\x04 \x01(\tR\x05start\x12\x10\n" +
+	"\x03end\x18\x05 \x01(\tR\x03end\x12\x16\n" +
+	"\x06allDay\x18\x06 \x01(\bR\x06allDay\x12\x16\n" +
+	"\x06clinic\x18\a \x01(\tR\x06clinic\x12\x16\n" +
+	"\x06userId\x18\b \x01(\x05R\x06userId\x12\x18\n" +
+	"\aservice\x18\t \x01(\tR\aservice2\xa6\a\n" +
+	"\x0fCalendarService\x12T\n" +
+	"\vHealthCheck\x12\x16.google.protobuf.Empty\x1a\x1c.calendarGRPC.HealthResponse\"\x0f\x82\xd3\xe4\x93\x02\t\x12\a/health\x12j\n" +
+	"\vCreateEvent\x12 .calendarGRPC.CreateEventRequest\x1a!.calendarGRPC.CreateEventResponse\"\x16\x82\xd3\xe4\x93\x02\x10\"\v/api/create:\x01*\x12[\n" +
+	"\n" +
+	"ListEvents\x12\x16.google.protobuf.Empty\x1a .calendarGRPC.ListEventsResponse\"\x13\x82\xd3\xe4\x93\x02\r\x12\v/api/events\x12a\n" +
+	"\rListEventsDay\x12\x16.google.protobuf.Empty\x1a .calendarGRPC.ListEventsResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/api/eventsDay\x12c\n" +
+	"\x0eListEventsWeek\x12\x16.google.protobuf.Empty\x1a .calendarGRPC.ListEventsResponse\"\x17\x82\xd3\xe4\x93\x02\x11\x12\x0f/api/eventsWeek\x12e\n" +
+	"\x0fListEventsMonth\x12\x16.google.protobuf.Empty\x1a .calendarGRPC.ListEventsResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/api/eventsMonth\x12`\n" +
+	"\bGetEvent\x12\x1d.calendarGRPC.GetEventRequest\x1a\x1e.calendarGRPC.GetEventResponse\"\x15\x82\xd3\xe4\x93\x02\x0f\x12\r/api/get/{id}\x12l\n" +
+	"\vDeleteEvent\x12 .calendarGRPC.DeleteEventRequest\x1a!.calendarGRPC.DeleteEventResponse\"\x18\x82\xd3\xe4\x93\x02\x12*\x10/api/delete/{id}\x12u\n" +
+	"\vUpdateEvent\x12 .calendarGRPC.UpdateEventRequest\x1a!.calendarGRPC.UpdateEventResponse\"!\x82\xd3\xe4\x93\x02\x1b\x1a\x16/api/update/{event.id}:\x01*B\x14Z\x12calendarGRPC/pb;pbb\x06proto3"
 
 var (
 	file_EventService_proto_rawDescOnce sync.Once
@@ -691,39 +671,44 @@ func file_EventService_proto_rawDescGZIP() []byte {
 
 var file_EventService_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_EventService_proto_goTypes = []any{
-	(*Event)(nil),               // 0: calendar.Event
-	(*CreateEventRequest)(nil),  // 1: calendar.CreateEventRequest
-	(*CreateEventResponse)(nil), // 2: calendar.CreateEventResponse
-	(*GetEventRequest)(nil),     // 3: calendar.GetEventRequest
-	(*GetEventResponse)(nil),    // 4: calendar.GetEventResponse
-	(*ListEventsRequest)(nil),   // 5: calendar.ListEventsRequest
-	(*ListEventsResponse)(nil),  // 6: calendar.ListEventsResponse
-	(*UpdateEventRequest)(nil),  // 7: calendar.UpdateEventRequest
-	(*UpdateEventResponse)(nil), // 8: calendar.UpdateEventResponse
-	(*DeleteEventRequest)(nil),  // 9: calendar.DeleteEventRequest
-	(*DeleteEventResponse)(nil), // 10: calendar.DeleteEventResponse
+	(*HealthResponse)(nil),      // 0: calendarGRPC.HealthResponse
+	(*CreateEventRequest)(nil),  // 1: calendarGRPC.CreateEventRequest
+	(*CreateEventResponse)(nil), // 2: calendarGRPC.CreateEventResponse
+	(*ListEventsResponse)(nil),  // 3: calendarGRPC.ListEventsResponse
+	(*GetEventRequest)(nil),     // 4: calendarGRPC.GetEventRequest
+	(*GetEventResponse)(nil),    // 5: calendarGRPC.GetEventResponse
+	(*DeleteEventRequest)(nil),  // 6: calendarGRPC.DeleteEventRequest
+	(*DeleteEventResponse)(nil), // 7: calendarGRPC.DeleteEventResponse
+	(*UpdateEventRequest)(nil),  // 8: calendarGRPC.UpdateEventRequest
+	(*UpdateEventResponse)(nil), // 9: calendarGRPC.UpdateEventResponse
+	(*Event)(nil),               // 10: calendarGRPC.Event
+	(*emptypb.Empty)(nil),       // 11: google.protobuf.Empty
 }
 var file_EventService_proto_depIdxs = []int32{
-	0,  // 0: calendar.CreateEventRequest.event:type_name -> calendar.Event
-	0,  // 1: calendar.GetEventResponse.event:type_name -> calendar.Event
-	0,  // 2: calendar.ListEventsResponse.events:type_name -> calendar.Event
-	0,  // 3: calendar.UpdateEventRequest.event:type_name -> calendar.Event
-	1,  // 4: calendar.CalendarService.CreateEvent:input_type -> calendar.CreateEventRequest
-	3,  // 5: calendar.CalendarService.GetEvent:input_type -> calendar.GetEventRequest
-	5,  // 6: calendar.CalendarService.ListEventsDay:input_type -> calendar.ListEventsRequest
-	5,  // 7: calendar.CalendarService.ListEventsWeek:input_type -> calendar.ListEventsRequest
-	5,  // 8: calendar.CalendarService.ListEventsMonth:input_type -> calendar.ListEventsRequest
-	7,  // 9: calendar.CalendarService.UpdateEvent:input_type -> calendar.UpdateEventRequest
-	9,  // 10: calendar.CalendarService.DeleteEvent:input_type -> calendar.DeleteEventRequest
-	2,  // 11: calendar.CalendarService.CreateEvent:output_type -> calendar.CreateEventResponse
-	4,  // 12: calendar.CalendarService.GetEvent:output_type -> calendar.GetEventResponse
-	6,  // 13: calendar.CalendarService.ListEventsDay:output_type -> calendar.ListEventsResponse
-	6,  // 14: calendar.CalendarService.ListEventsWeek:output_type -> calendar.ListEventsResponse
-	6,  // 15: calendar.CalendarService.ListEventsMonth:output_type -> calendar.ListEventsResponse
-	8,  // 16: calendar.CalendarService.UpdateEvent:output_type -> calendar.UpdateEventResponse
-	10, // 17: calendar.CalendarService.DeleteEvent:output_type -> calendar.DeleteEventResponse
-	11, // [11:18] is the sub-list for method output_type
-	4,  // [4:11] is the sub-list for method input_type
+	10, // 0: calendarGRPC.CreateEventRequest.event:type_name -> calendarGRPC.Event
+	10, // 1: calendarGRPC.ListEventsResponse.events:type_name -> calendarGRPC.Event
+	10, // 2: calendarGRPC.GetEventResponse.event:type_name -> calendarGRPC.Event
+	10, // 3: calendarGRPC.UpdateEventRequest.event:type_name -> calendarGRPC.Event
+	11, // 4: calendarGRPC.CalendarService.HealthCheck:input_type -> google.protobuf.Empty
+	1,  // 5: calendarGRPC.CalendarService.CreateEvent:input_type -> calendarGRPC.CreateEventRequest
+	11, // 6: calendarGRPC.CalendarService.ListEvents:input_type -> google.protobuf.Empty
+	11, // 7: calendarGRPC.CalendarService.ListEventsDay:input_type -> google.protobuf.Empty
+	11, // 8: calendarGRPC.CalendarService.ListEventsWeek:input_type -> google.protobuf.Empty
+	11, // 9: calendarGRPC.CalendarService.ListEventsMonth:input_type -> google.protobuf.Empty
+	4,  // 10: calendarGRPC.CalendarService.GetEvent:input_type -> calendarGRPC.GetEventRequest
+	6,  // 11: calendarGRPC.CalendarService.DeleteEvent:input_type -> calendarGRPC.DeleteEventRequest
+	8,  // 12: calendarGRPC.CalendarService.UpdateEvent:input_type -> calendarGRPC.UpdateEventRequest
+	0,  // 13: calendarGRPC.CalendarService.HealthCheck:output_type -> calendarGRPC.HealthResponse
+	2,  // 14: calendarGRPC.CalendarService.CreateEvent:output_type -> calendarGRPC.CreateEventResponse
+	3,  // 15: calendarGRPC.CalendarService.ListEvents:output_type -> calendarGRPC.ListEventsResponse
+	3,  // 16: calendarGRPC.CalendarService.ListEventsDay:output_type -> calendarGRPC.ListEventsResponse
+	3,  // 17: calendarGRPC.CalendarService.ListEventsWeek:output_type -> calendarGRPC.ListEventsResponse
+	3,  // 18: calendarGRPC.CalendarService.ListEventsMonth:output_type -> calendarGRPC.ListEventsResponse
+	5,  // 19: calendarGRPC.CalendarService.GetEvent:output_type -> calendarGRPC.GetEventResponse
+	7,  // 20: calendarGRPC.CalendarService.DeleteEvent:output_type -> calendarGRPC.DeleteEventResponse
+	9,  // 21: calendarGRPC.CalendarService.UpdateEvent:output_type -> calendarGRPC.UpdateEventResponse
+	13, // [13:22] is the sub-list for method output_type
+	4,  // [4:13] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name

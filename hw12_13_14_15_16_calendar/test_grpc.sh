@@ -3,7 +3,7 @@
 # Test script for Calendar gRPC API
 # Make sure the gRPC server is running on localhost:50051
 
-SERVICE="calendar.CalendarService"
+SERVICE="calendarGRPC.CalendarService"
 HOST="localhost:50051"
 
 echo "=== Testing Calendar gRPC API ==="
@@ -15,11 +15,11 @@ grpcurl -plaintext -d '{
   "event": {
     "title": "Test Meeting",
     "description": "This is a test event",
-    "start_time": "2025-08-15T10:00:00Z",
-    "end_time": "2025-08-15T11:00:00Z",
-    "all_day": 0,
+    "start": "2025-08-15T10:00:00Z",
+    "end": "2025-08-15T11:00:00Z",
+    "allDay": false,
     "clinic": "Test Clinic",
-    "user_id": 123,
+    "userId": 123,
     "service": "Consultation"
   }
 }' $HOST $SERVICE/CreateEvent
@@ -31,8 +31,8 @@ grpcurl -plaintext -d '{
   "event": {
     "title": "Malformed",
     "description": "This is a malformed event",
-    "start_time": "WRONG_TIME_FORMAT",
-    "end_time": "2025-08-01T11:00:00Z"
+    "start": "WRONG_TIME_FORMAT",
+    "end": "2025-08-01T11:00:00Z"
   }
 }' $HOST $SERVICE/CreateEvent
 echo
@@ -43,25 +43,25 @@ grpcurl -plaintext -d '{
   "event": {
     "title": "Another Test Event Today",
     "description": "todays test event",
-    "start_time": "2025-08-13T14:00:00Z",
-    "end_time": "2025-08-13T15:00:00Z"
+    "start": "2025-08-13T14:00:00Z",
+    "end": "2025-08-13T15:00:00Z"
   }
 }' $HOST $SERVICE/CreateEvent
 echo
 
 # 4. List day events
 echo "4. Listing day events..."
-grpcurl -plaintext -d '{"date": "2025-08-15"}' $HOST $SERVICE/ListEventsDay
+grpcurl -plaintext -d '{}' $HOST $SERVICE/ListEventsDay
 echo
 
 # 5. List week events
 echo "5. Listing week events..."
-grpcurl -plaintext -d '{"date": "2025-08-10"}' $HOST $SERVICE/ListEventsWeek
+grpcurl -plaintext -d '{}' $HOST $SERVICE/ListEventsWeek
 echo
 
 # 6. List month events
 echo "6. Listing month events..."
-grpcurl -plaintext -d '{"date": "2025-08-01"}' $HOST $SERVICE/ListEventsMonth
+grpcurl -plaintext -d '{}' $HOST $SERVICE/ListEventsMonth
 echo
 
 # 7. Get non-existing event
@@ -102,11 +102,11 @@ grpcurl -plaintext -d '{
     "id": 1,
     "title": "Updated Event Title",
     "description": "Updated description of the event",
-    "start_time": "2025-08-15T09:00:00Z",
-    "end_time": "2025-08-15T11:00:00Z",
-    "all_day": 0,
+    "start": "2025-08-15T09:00:00Z",
+    "end": "2025-08-15T11:00:00Z",
+    "allDay": false,
     "clinic": "Main Clinic",
-    "user_id": 123,
+    "userId": 123,
     "service": "Updated Service"
   }
 }' $HOST $SERVICE/UpdateEvent
