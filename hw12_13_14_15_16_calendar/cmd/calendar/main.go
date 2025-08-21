@@ -56,9 +56,10 @@ func main() {
 			return
 		}
 
-		grpcServer := grpc.NewServer()
-		eventServer := calendarGRPC.NewEventServer(appInstance)
-		calendarpb.RegisterCalendarServiceServer(grpcServer, eventServer)
+		//grpcServer := grpc.NewServer()
+		//eventServer := calendarGRPC.NewEventServer(appInstance)
+		//calendarpb.RegisterCalendarServiceServer(grpcServer, eventServer)
+		grpcServer := calendarGRPC.NewGRPCServer(appInstance, logg)
 		reflection.Register(grpcServer)
 
 		logg.Info("gRPC server listening on " + grpcAddr)
