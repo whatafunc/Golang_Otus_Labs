@@ -127,7 +127,9 @@ func (s *EventServer) CreateEvent(ctx context.Context, req *calendarpb.CreateEve
 	return &calendarpb.CreateEventResponse{Success: true}, nil
 }
 
-func (s *EventServer) GetEvent(ctx context.Context, req *calendarpb.GetEventRequest) (*calendarpb.GetEventResponse, error) {
+func (s *EventServer) GetEvent(ctx context.Context, req *calendarpb.GetEventRequest) (
+	*calendarpb.GetEventResponse,
+	error) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
