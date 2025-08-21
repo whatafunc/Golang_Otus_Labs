@@ -7,9 +7,10 @@ import (
 
 	calendarpb "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/calendarGRPC/pb"
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/app"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/logger"
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
-
 	"google.golang.org/grpc"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -22,6 +23,19 @@ type EventServer struct {
 
 func NewEventServer(application *app.App) *EventServer {
 	return &EventServer{application: application}
+}
+
+// NewGRPCServer creates a grpc.Server with logging interceptor and registers the EventServer.
+func NewGRPCServer(app *app.App, log *logger.Logger) *grpc.Server {
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(LoggingUnaryInterceptor(log)),
+	}
+	grpcServer := grpc.NewServer(opts...)
+
+	eventServer := NewEventServer(app)
+	calendarpb.RegisterCalendarServiceServer(grpcServer, eventServer)
+
+	return grpcServer
 }
 
 // --- Helpers ---
@@ -223,33 +237,4 @@ func (s *EventServer) DeleteEvent(ctx context.Context, req *calendarpb.DeleteEve
 		}, nil
 	}
 	return &calendarpb.DeleteEventResponse{Success: true}, nil
-}
-
-// Logger defines minimal logging interface used in interceptor
-type Logger interface {
-	Info(msg string)
-}
-
-// LoggingUnaryInterceptor returns a unary interceptor that logs details about the request
-func LoggingUnaryInterceptor(logger Logger) grpc.UnaryServerInterceptor {
-	return func(
-		ctx context.Context,
-		req interface{},
-		info *grpc.UnaryServerInfo,
-		handler grpc.UnaryHandler,
-	) (interface{}, error) {
-		start := time.Now()
-		logger.Info(fmt.Sprintf("gRPC call start: %s", info.FullMethod))
-
-		resp, err := handler(ctx, req)
-
-		duration := time.Since(start)
-		if err != nil {
-			logger.Info(fmt.Sprintf("gRPC call error: %s | duration: %s | error: %v", info.FullMethod, duration, err))
-		} else {
-			logger.Info(fmt.Sprintf("gRPC call end: %s | duration: %s", info.FullMethod, duration))
-		}
-
-		return resp, err
-	}
 }
