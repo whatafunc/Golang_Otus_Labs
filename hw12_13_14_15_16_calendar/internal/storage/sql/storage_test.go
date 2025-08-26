@@ -11,15 +11,11 @@ import (
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib" //nolint:depguard // allowed as per our webinars
-
-	"github.com/pressly/goose/v3" //nolint:depguard // allowed as per our webinars
-
+	"github.com/pressly/goose/v3"      //nolint:depguard // allowed as per our webinars
 	//nolint:depguard // allowed for test config loading
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
-
 	//nolint:depguard // allowed for test config loading
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
-
 	//nolint:depguard // allowed for test config loading
 	"gopkg.in/yaml.v3"
 )
