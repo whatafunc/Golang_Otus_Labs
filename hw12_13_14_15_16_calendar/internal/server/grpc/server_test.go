@@ -1,4 +1,4 @@
-package calendarGRPC
+package calendargrpc
 
 import (
 	"context"
@@ -6,10 +6,6 @@ import (
 
 	calendarpb "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/calendarGRPC/pb"
 )
-
-func TestAlwaysPass(t *testing.T) {
-	// This will always succeed
-}
 
 func TestCreateEventReturnsErrorWhenAppIsNil(t *testing.T) {
 	server := &EventServer{application: nil}

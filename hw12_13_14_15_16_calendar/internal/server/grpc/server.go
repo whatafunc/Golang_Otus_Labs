@@ -1,4 +1,4 @@
-package calendarGRPC
+package calendargrpc
 
 import (
 	"context"
@@ -87,7 +87,7 @@ func fromProtoEvent(pe *calendarpb.Event) storage.Event {
 
 func toProtoEvent(ev storage.Event) *calendarpb.Event {
 	return &calendarpb.Event{
-		Id:          int32(ev.ID),
+		Id:          int32(ev.ID), //nolint:gosec
 		Title:       ev.Title,
 		Description: ev.Description,
 		Start:       formatTimePtr(ev.Start),
@@ -101,7 +101,7 @@ func toProtoEvent(ev storage.Event) *calendarpb.Event {
 		}(),
 		UserId: func() int32 {
 			if ev.UserID != nil {
-				return int32(*ev.UserID)
+				return int32(*ev.UserID) //nolint:gosec
 			}
 			return 0
 		}(),
@@ -122,7 +122,7 @@ func toProtoEvents(events []storage.Event) []*calendarpb.Event {
 	return result
 }
 
-// Stub for period constants needed for filtering events
+// Stub for period constants needed for filtering events.
 const (
 	PeriodDay = iota
 	PeriodWeek
@@ -131,7 +131,10 @@ const (
 
 // --- RPC Implementations ---
 
-func (s *EventServer) CreateEvent(ctx context.Context, req *calendarpb.CreateEventRequest) (*calendarpb.CreateEventResponse, error) {
+func (s *EventServer) CreateEvent(
+	ctx context.Context,
+	req *calendarpb.CreateEventRequest,
+) (*calendarpb.CreateEventResponse, error) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
@@ -143,7 +146,8 @@ func (s *EventServer) CreateEvent(ctx context.Context, req *calendarpb.CreateEve
 
 func (s *EventServer) GetEvent(ctx context.Context, req *calendarpb.GetEventRequest) (
 	*calendarpb.GetEventResponse,
-	error) {
+	error,
+) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
@@ -162,6 +166,7 @@ func (s *EventServer) GetEvent(ctx context.Context, req *calendarpb.GetEventRequ
 }
 
 func (s *EventServer) ListEventsDay(ctx context.Context, req *emptypb.Empty) (*calendarpb.ListEventsResponse, error) {
+	_ = req
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
@@ -177,6 +182,7 @@ func (s *EventServer) ListEventsDay(ctx context.Context, req *emptypb.Empty) (*c
 }
 
 func (s *EventServer) ListEventsWeek(ctx context.Context, req *emptypb.Empty) (*calendarpb.ListEventsResponse, error) {
+	_ = req
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
@@ -192,6 +198,7 @@ func (s *EventServer) ListEventsWeek(ctx context.Context, req *emptypb.Empty) (*
 }
 
 func (s *EventServer) ListEventsMonth(ctx context.Context, req *emptypb.Empty) (*calendarpb.ListEventsResponse, error) {
+	_ = req
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
@@ -206,7 +213,10 @@ func (s *EventServer) ListEventsMonth(ctx context.Context, req *emptypb.Empty) (
 	}, nil
 }
 
-func (s *EventServer) UpdateEvent(ctx context.Context, req *calendarpb.UpdateEventRequest) (*calendarpb.UpdateEventResponse, error) {
+func (s *EventServer) UpdateEvent(
+	ctx context.Context,
+	req *calendarpb.UpdateEventRequest,
+) (*calendarpb.UpdateEventResponse, error) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
@@ -225,7 +235,10 @@ func (s *EventServer) UpdateEvent(ctx context.Context, req *calendarpb.UpdateEve
 	return &calendarpb.UpdateEventResponse{Success: true}, nil
 }
 
-func (s *EventServer) DeleteEvent(ctx context.Context, req *calendarpb.DeleteEventRequest) (*calendarpb.DeleteEventResponse, error) {
+func (s *EventServer) DeleteEvent(
+	ctx context.Context,
+	req *calendarpb.DeleteEventRequest,
+) (*calendarpb.DeleteEventResponse, error) {
 	if s.application == nil {
 		return nil, status.Error(codes.Internal, "application is not initialized")
 	}
