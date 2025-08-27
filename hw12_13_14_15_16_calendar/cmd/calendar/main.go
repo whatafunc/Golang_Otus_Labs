@@ -17,6 +17,7 @@ import (
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/logger"
 	calendarGRPC "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/server/grpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -56,9 +57,6 @@ func main() {
 			return
 		}
 
-		//grpcServer := grpc.NewServer()
-		//eventServer := calendarGRPC.NewEventServer(appInstance)
-		//calendarpb.RegisterCalendarServiceServer(grpcServer, eventServer)
 		grpcServer := calendarGRPC.NewGRPCServer(appInstance, logg)
 		reflection.Register(grpcServer)
 
@@ -71,7 +69,7 @@ func main() {
 	// Start HTTP gateway server
 	go func() {
 		mux := runtime.NewServeMux()
-		opts := []grpc.DialOption{grpc.WithInsecure()} // Use secure options for prod
+		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 		if err := calendarpb.RegisterCalendarServiceHandlerFromEndpoint(ctx, mux, grpcAddr, opts); err != nil {
 			logg.Error("failed to start HTTP gateway: " + err.Error())
@@ -80,7 +78,13 @@ func main() {
 		}
 
 		logg.Info("HTTP gateway listening on " + httpAddr)
-		if err := http.ListenAndServe(httpAddr, mux); err != nil {
+		srv := &http.Server{
+			Addr:         httpAddr,
+			Handler:      mux,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		if err := srv.ListenAndServe(); err != nil {
 			logg.Error("failed to serve HTTP: " + err.Error())
 		}
 	}()

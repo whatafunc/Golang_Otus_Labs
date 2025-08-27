@@ -1,4 +1,3 @@
-//nolint:gci // allowed for tests
 package postgresstorage
 
 import (

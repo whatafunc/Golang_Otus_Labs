@@ -1,4 +1,4 @@
-package calendarGRPC
+package calendargrpc
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// LoggingUnaryInterceptor returns a unary interceptor that logs details about the request
+// LoggingUnaryInterceptor returns a unary interceptor that logs details about the request.
 func LoggingUnaryInterceptor(logger *logger.Logger) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,
