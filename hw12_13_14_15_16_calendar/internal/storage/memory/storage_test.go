@@ -1,4 +1,3 @@
-//nolint:depguard // allowed for tests
 package memorystorage
 
 import (

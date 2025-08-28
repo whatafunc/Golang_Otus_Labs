@@ -33,6 +33,7 @@ func main() {
 		printVersion()
 		return
 	}
+
 	cfg, err := LoadConfig(configFile)
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)
@@ -89,7 +90,10 @@ func main() {
 		}
 	}()
 
-	// Gracefully handle termination signals
+	waitForShutdown(logg, cancel) // Gracefully handle termination signals.
+}
+
+func waitForShutdown(logg *logger.Logger, cancel context.CancelFunc) {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 

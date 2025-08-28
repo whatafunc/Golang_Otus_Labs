@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	// Import pgx driver for database/sql usage with Postgres storage.
-	_ "github.com/jackc/pgx/v4/stdlib"                                                 //nolint:depguard // allowed as per our webinars
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"  //nolint:depguard
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage" //nolint:depguard
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
 )
 
 var (

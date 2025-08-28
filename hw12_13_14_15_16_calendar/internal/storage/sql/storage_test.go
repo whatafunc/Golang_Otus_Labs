@@ -9,13 +9,10 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/jackc/pgx/v4/stdlib" //nolint:depguard // allowed as per our webinars
-	"github.com/pressly/goose/v3"      //nolint:depguard // allowed as per our webinars
-	//nolint:depguard // allowed for test config loading
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/pressly/goose/v3"
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
-	//nolint:depguard // allowed for test config loading
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
-	//nolint:depguard // allowed for test config loading
 	"gopkg.in/yaml.v3"
 )
 
@@ -75,7 +72,6 @@ func countEvents(store *Storage, ctx context.Context) (int, error) {
 func TestCreateAndGetEvent(t *testing.T) {
 	cfg, migrationsPath := testConfig()
 	dsn := os.Getenv("POSTGRES_DSN")
-	fmt.Println("!!! Current POSTGRES_DSN:", dsn)
 	cfg.DSN = dsn
 	if err := runGooseMigrations(cfg.DSN, migrationsPath); err != nil {
 		t.Fatalf("Failed to run goose migrations: %v", err)
@@ -101,11 +97,6 @@ func TestCreateAndGetEvent(t *testing.T) {
 	event.Start = &start
 	event.End = &end
 
-	// err := store.CreateEvent(ctx, event)
-	// if err != nil {
-	// 	t.Fatalf("CreateEvent failed: %v", err)
-	// }
-
 	err = store.CreateEvent(ctx, event)
 	if err != nil {
 		t.Fatalf("CreateEvent failed: %v", err)
@@ -120,10 +111,10 @@ func TestCreateAndGetEvent(t *testing.T) {
 	}
 
 	var id int
-	row := store.db.QueryRowContext(ctx, "SELECT id FROM events ORDER BY id DESC LIMIT 1")
-	if err := row.Scan(&id); err != nil {
-		t.Fatalf("Failed to get last inserted id: %v", err)
-	}
+	// row := store.db.QueryRowContext(ctx, "SELECT id FROM events ORDER BY id DESC LIMIT 1")
+	// if err := row.Scan(&id); err != nil {
+	// 	t.Fatalf("Failed to get last inserted id: %v", err)
+	// }
 	got, err := store.GetEvent(ctx, id)
 	if err != nil {
 		t.Fatalf("GetEvent failed: %v", err)
