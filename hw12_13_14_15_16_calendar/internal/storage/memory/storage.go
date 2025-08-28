@@ -1,4 +1,3 @@
-//nolint:depguard // allowed - temporary
 package memorystorage
 
 import (

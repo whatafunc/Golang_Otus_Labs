@@ -1,4 +1,3 @@
-//nolint:depguard // not finished app
 package app
 
 import (

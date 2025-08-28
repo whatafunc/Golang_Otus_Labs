@@ -5,17 +5,37 @@ run:
 
 linters-settings:
   depguard:
-    list-type: blacklist
-    include-go-root: true
-    packages:
-      - github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/cmd
-    packages-with-error-message:
-      - package: github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/cmd
+    rules:
+      main:  # ← Changed from "Main" to "main"
+        files:
+          - ^internal/.*
+          - ^cmd/.*
+        allowRegexp: true
+        allow:
+          - $gostd
+          - ^google\.golang\.org/grpc(/.*)?$
+          - ^google\.golang\.org/protobuf(/.*)?$  # ← Broader pattern
+          - ^github\.com/grpc-ecosystem/grpc-gateway(/.*)?$  # ← Broader pattern
+          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar(/.*)?$  # ← Broader pattern
+
+      test:  # ← Changed from "Test" to "test"
+        files:
+          - _test\.go$
+        allowRegexp: true
+        allow:
+          - $gostd  # ← CRITICAL: Added this line
+          - ^github\.com/stretchr/testify(/.*)?$
+          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar(/.*)?$  # ← Broader pattern
+
+      NoCmdImports:
+        files:
+          - ^(?!cmd/).*\.go$
+        allowRegexp: true
+        allow:
+          - $gostd
+        denyRegexp:
+          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/cmd(/.*)?$
         message: "Do not import cmd/ from non-cmd packages (clean architecture rule)"
-  
-  funlen:
-    lines: 100
-    statements: 50
 
 issues:
   exclude-rules:
@@ -30,6 +50,7 @@ linters:
   disable-all: true
   enable:
     - asciicheck
+    - depguard
     - dogsled
     - dupl
     - bodyclose
@@ -37,6 +58,7 @@ linters:
     - errorlint
     - exhaustive
     - copyloopvar
+    - funlen
     - gci
     - gocognit
     - goconst
