@@ -73,6 +73,7 @@ func TestCreateAndGetEvent(t *testing.T) {
 	cfg, migrationsPath := testConfig()
 	dsn := os.Getenv("POSTGRES_DSN")
 	cfg.DSN = dsn
+	fmt.Println("ENV POSTGRES_DSN: ", dsn)
 	if err := runGooseMigrations(cfg.DSN, migrationsPath); err != nil {
 		t.Fatalf("Failed to run goose migrations: %v", err)
 	}
@@ -83,7 +84,7 @@ func TestCreateAndGetEvent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to count events before: %v", err)
 	}
-	fmt.Println("countBefore", countBefore)
+	fmt.Println("countBefore: ", countBefore)
 
 	event := storage.Event{
 		Title:       "Test Event",
@@ -111,10 +112,10 @@ func TestCreateAndGetEvent(t *testing.T) {
 	}
 
 	var id int
-	// row := store.db.QueryRowContext(ctx, "SELECT id FROM events ORDER BY id DESC LIMIT 1")
-	// if err := row.Scan(&id); err != nil {
-	// 	t.Fatalf("Failed to get last inserted id: %v", err)
-	// }
+	row := store.db.QueryRowContext(ctx, "SELECT id FROM events ORDER BY id DESC LIMIT 1")
+	if err := row.Scan(&id); err != nil {
+		t.Fatalf("Failed to get last inserted id: %v", err)
+	}
 	got, err := store.GetEvent(ctx, id)
 	if err != nil {
 		t.Fatalf("GetEvent failed: %v", err)
