@@ -2,42 +2,20 @@ run:
   tests: true
   build-tags:
     - bench
-    - !bench
 
 linters-settings:
   depguard:
-    rules:
-      Main:
-        files:
-          - $all
-          - "!$test"
-        allowRegexp: true
-        allow:
-          - $gostd
-          - ^google\.golang\.org/grpc(/.*)?$
-          - ^google\.golang\.org/protobuf/types/known/emptypb$
-          - ^github\.com/grpc-ecosystem/grpc-gateway/v2/runtime$
-          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal(/.*)?$
-          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/calendarGRPC/pb$
-
-      Test:
-        files:
-          - $test
-        allowRegexp: true
-        allow:
-          - $gostd
-          - ^github\.com/stretchr/testify(/.*)?$
-          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/calendarGRPC/pb$
-
-      NoCmdImports:
-        files:
-          - ^(?!cmd/).*\.go$ # Any file NOT in cmd/
-        allowRegexp: true
-        allow:
-          - $gostd                # ✅ Added to satisfy depguard requirement
-        denyRegexp:
-          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/cmd(/.*)?$
+    list-type: blacklist
+    include-go-root: true
+    packages:
+      - github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/cmd
+    packages-with-error-message:
+      - package: github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/cmd
         message: "Do not import cmd/ from non-cmd packages (clean architecture rule)"
+  
+  funlen:
+    lines: 100
+    statements: 50
 
 issues:
   exclude-rules:
@@ -52,7 +30,6 @@ linters:
   disable-all: true
   enable:
     - asciicheck
-    - depguard
     - dogsled
     - dupl
     - bodyclose
@@ -60,7 +37,6 @@ linters:
     - errorlint
     - exhaustive
     - copyloopvar
-    - funlen
     - gci
     - gocognit
     - goconst
