@@ -128,6 +128,11 @@ func TestCreateAndGetEvent(t *testing.T) {
 		t.Fatalf("Failed to delete inserted event: %v", err)
 	}
 
+	assertEventCountUnchanged(ctx, t, store, countBefore)
+}
+
+func assertEventCountUnchanged(ctx context.Context, t *testing.T, store *Storage, countBefore int) {
+	t.Helper()
 	countAfter, err := countEvents(store, ctx)
 	if err != nil {
 		t.Fatalf("Failed to count events after: %v", err)
