@@ -27,5 +27,3 @@ func (l Logger) Error(msg string) {
 		fmt.Fprintln(os.Stderr, msg)
 	}
 }
-
-// TODO
