@@ -18,10 +18,11 @@ import (
 type EventServer struct {
 	calendarpb.UnimplementedCalendarServiceServer
 	application *app.App
+	logger      *logger.Logger
 }
 
-func NewEventServer(application *app.App) *EventServer {
-	return &EventServer{application: application}
+func NewEventServer(application *app.App, log *logger.Logger) *EventServer {
+	return &EventServer{application: application, logger: log}
 }
 
 // NewGRPCServer creates a grpc.Server with logging interceptor and registers the EventServer.
@@ -31,7 +32,7 @@ func NewGRPCServer(app *app.App, log *logger.Logger) *grpc.Server {
 	}
 	grpcServer := grpc.NewServer(opts...)
 
-	eventServer := NewEventServer(app)
+	eventServer := NewEventServer(app, log)
 	calendarpb.RegisterCalendarServiceServer(grpcServer, eventServer)
 
 	return grpcServer
@@ -136,11 +137,15 @@ func (s *EventServer) CreateEvent(
 	req *calendarpb.CreateEventRequest,
 ) (*calendarpb.CreateEventResponse, error) {
 	if s.application == nil {
-		return nil, status.Error(codes.Internal, "application is not initialized")
+		s.logger.Error("application is not initialized")
+		return nil, status.Error(codes.Unavailable, "something went wrong, pls try again later")
 	}
 	if err := s.application.CreateEvent(ctx, fromProtoEvent(req.Event)); err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create event: %v", err)
+		s.logger.Error(fmt.Sprintf("failed to create event: %v", err))
+		return nil, status.Errorf(codes.Unavailable, "something went wrong, pls try again a bit later")
 	}
+
+	s.logger.Info("event created successfully")
 	return &calendarpb.CreateEventResponse{Success: true}, nil
 }
 
