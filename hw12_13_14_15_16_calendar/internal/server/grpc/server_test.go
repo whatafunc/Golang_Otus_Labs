@@ -5,10 +5,13 @@ import (
 	"testing"
 
 	calendarpb "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/calendarGRPC/pb"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/logger"
 )
 
 func TestCreateEventReturnsErrorWhenAppIsNil(t *testing.T) {
-	server := &EventServer{application: nil}
+	// Create a real logger instead of nil
+	log := logger.New("info")
+	server := &EventServer{application: nil, logger: log}
 	req := &calendarpb.CreateEventRequest{Event: &calendarpb.Event{}}
 
 	_, err := server.CreateEvent(context.Background(), req)
