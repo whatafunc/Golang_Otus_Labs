@@ -159,7 +159,7 @@ func (s *EventServer) CreateEvent(
 	eventValidated, err := fromProtoEvent(req.Event)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("failed to create event with bad data input for: %v", err))
-		return nil, status.Errorf(codes.InvalidArgument, "something went wrong with recieved data")
+		return nil, status.Errorf(codes.InvalidArgument, "something went wrong with received data")
 	}
 
 	if err := s.application.CreateEvent(ctx, eventValidated); err != nil {
@@ -257,7 +257,7 @@ func (s *EventServer) UpdateEvent(
 	eventValidated, err := fromProtoEvent(req.Event)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("failed to create event with bad data input for: %v", err))
-		return nil, status.Errorf(codes.InvalidArgument, "something went wrong with recieved data")
+		return nil, status.Errorf(codes.InvalidArgument, "something went wrong with received data")
 	}
 
 	if err := s.application.UpdateEvent(ctx, eventValidated); err != nil {

@@ -38,24 +38,19 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)
 	}
-
 	logg := logger.New(cfg.Logger.Level)
-
 	appInstance := app.NewWithConfig(cfg, logg)
 	if appInstance == nil {
 		logg.Error("application is not initialized")
-		//return nil, status.Error(codes.Unavailable, "something went wrong, pls try again later")
 		return
 	}
-
 	grpcAddr := cfg.GRPC.ListenGrpc
 	httpAddr := cfg.HTTP.Listen
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Start gRPC server
-	go func() {
+	go func() { // Start gRPC server
 		lis, err := net.Listen("tcp", grpcAddr)
 		if err != nil {
 			logg.Error("failed to listen for gRPC: " + err.Error())
@@ -72,8 +67,7 @@ func main() {
 		}
 	}()
 
-	// Start HTTP gateway server
-	go func() {
+	go func() { // Start HTTP gateway server
 		mux := runtime.NewServeMux()
 		opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
