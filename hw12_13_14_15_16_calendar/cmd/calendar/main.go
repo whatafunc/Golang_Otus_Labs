@@ -42,6 +42,11 @@ func main() {
 	logg := logger.New(cfg.Logger.Level)
 
 	appInstance := app.NewWithConfig(cfg, logg)
+	if appInstance == nil {
+		logg.Error("application is not initialized")
+		//return nil, status.Error(codes.Unavailable, "something went wrong, pls try again later")
+		return
+	}
 
 	grpcAddr := cfg.GRPC.ListenGrpc
 	httpAddr := cfg.HTTP.Listen
