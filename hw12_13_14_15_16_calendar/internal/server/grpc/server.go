@@ -58,32 +58,47 @@ func formatTimePtr(t *time.Time) string {
 	return t.Format(time.RFC3339)
 }
 
-func fromProtoEvent(pe *calendarpb.Event) storage.Event {
+func fromProtoEvent(pe *calendarpb.Event) (storage.Event, error) {
 	if pe == nil {
-		return storage.Event{}
+		return storage.Event{}, fmt.Errorf("event is nil")
 	}
+
+	start := parseTimePtr(pe.Start)
+	if start == nil {
+		return storage.Event{}, fmt.Errorf("invalid start time: %q", pe.Start)
+	}
+
+	var end *time.Time
+	if pe.End != "" {
+		end = parseTimePtr(pe.End)
+		if end == nil {
+			return storage.Event{}, fmt.Errorf("invalid end time: %q", pe.End)
+		}
+	}
+
 	return storage.Event{
-		ID:          int(pe.Id),
-		Title:       pe.Title,
-		Description: pe.Description,
-		Start:       parseTimePtr(pe.Start),
-		End:         parseTimePtr(pe.End),
-		AllDay: func() float64 {
-			if pe.AllDay {
-				return 1
-			}
-			return 0
-		}(),
-		Clinic: &pe.Clinic,
-		UserID: func() *int {
-			if pe.UserId == 0 {
-				return nil
-			}
-			uid := int(pe.UserId)
-			return &uid
-		}(),
-		Service: &pe.Service,
-	}
+			ID:          int(pe.Id),
+			Title:       pe.Title,
+			Description: pe.Description,
+			Start:       start,
+			End:         end,
+			AllDay: func() float64 {
+				if pe.AllDay {
+					return 1
+				}
+				return 0
+			}(),
+			Clinic: &pe.Clinic,
+			UserID: func() *int {
+				if pe.UserId == 0 {
+					return nil
+				}
+				uid := int(pe.UserId)
+				return &uid
+			}(),
+			Service: &pe.Service,
+		},
+		nil
 }
 
 func toProtoEvent(ev storage.Event) *calendarpb.Event {
@@ -136,11 +151,18 @@ func (s *EventServer) CreateEvent(
 	ctx context.Context,
 	req *calendarpb.CreateEventRequest,
 ) (*calendarpb.CreateEventResponse, error) {
-	if s.application == nil {
-		s.logger.Error("application is not initialized")
-		return nil, status.Error(codes.Unavailable, "something went wrong, pls try again later")
+	// if s.application == nil { // moved to main.go - before server start step
+	// 	s.logger.Error("application is not initialized")
+	// 	return nil, status.Error(codes.Unavailable, "something went wrong, pls try again later")
+	// }
+
+	eventValidated, err := fromProtoEvent(req.Event)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("failed to create event with bad data input for: %v", err))
+		return nil, status.Errorf(codes.InvalidArgument, "something went wrong with recieved data")
 	}
-	if err := s.application.CreateEvent(ctx, fromProtoEvent(req.Event)); err != nil {
+
+	if err := s.application.CreateEvent(ctx, eventValidated); err != nil {
 		s.logger.Error(fmt.Sprintf("failed to create event: %v", err))
 		return nil, status.Errorf(codes.Unavailable, "something went wrong, pls try again a bit later")
 	}
@@ -231,7 +253,14 @@ func (s *EventServer) UpdateEvent(
 			Error:   "no event data provided",
 		}, nil
 	}
-	if err := s.application.UpdateEvent(ctx, fromProtoEvent(req.Event)); err != nil {
+
+	eventValidated, err := fromProtoEvent(req.Event)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("failed to create event with bad data input for: %v", err))
+		return nil, status.Errorf(codes.InvalidArgument, "something went wrong with recieved data")
+	}
+
+	if err := s.application.UpdateEvent(ctx, eventValidated); err != nil {
 		return &calendarpb.UpdateEventResponse{
 			Success: false,
 			Error:   fmt.Sprintf("failed to update event: %v", err),
