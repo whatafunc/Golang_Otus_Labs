@@ -2,6 +2,7 @@ package calendargrpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -20,6 +21,11 @@ type EventServer struct {
 	application *app.App
 	logger      *logger.Logger
 }
+
+var (
+	ErrInvalidDate = errors.New("invalid date format")
+	ErrEmptyInput  = errors.New("empty event input")
+)
 
 func NewEventServer(application *app.App, log *logger.Logger) *EventServer {
 	return &EventServer{application: application, logger: log}
@@ -60,19 +66,26 @@ func formatTimePtr(t *time.Time) string {
 
 func fromProtoEvent(pe *calendarpb.Event) (storage.Event, error) {
 	if pe == nil {
-		return storage.Event{}, fmt.Errorf("event is nil")
+		// return storage.Event{}, fmt.Errorf("event is nil")
+		return storage.Event{}, fmt.Errorf("%w: event is nil", ErrEmptyInput)
 	}
 
 	start := parseTimePtr(pe.Start)
 	if start == nil {
-		return storage.Event{}, fmt.Errorf("invalid start time: %q", pe.Start)
+		//return storage.Event{}, fmt.Errorf("invalid start time: %q", pe.Start)
+		return storage.Event{}, fmt.Errorf(
+			"%w: expected RFC3339, got %q", ErrInvalidDate, pe.Start,
+		)
 	}
 
 	var end *time.Time
 	if pe.End != "" {
 		end = parseTimePtr(pe.End)
 		if end == nil {
-			return storage.Event{}, fmt.Errorf("invalid end time: %q", pe.End)
+			//return storage.Event{}, fmt.Errorf("invalid end time: %q", pe.End)
+			return storage.Event{}, fmt.Errorf(
+				"%w: expected RFC3339, got %q", ErrInvalidDate, pe.End,
+			)
 		}
 	}
 
@@ -151,15 +164,20 @@ func (s *EventServer) CreateEvent(
 	ctx context.Context,
 	req *calendarpb.CreateEventRequest,
 ) (*calendarpb.CreateEventResponse, error) {
-	// if s.application == nil { // moved to main.go - before server start step
-	// 	s.logger.Error("application is not initialized")
-	// 	return nil, status.Error(codes.Unavailable, "something went wrong, pls try again later")
-	// }
 
 	eventValidated, err := fromProtoEvent(req.Event)
 	if err != nil {
-		s.logger.Error(fmt.Sprintf("failed to create event with bad data input for: %v", err))
-		return nil, status.Errorf(codes.InvalidArgument, "something went wrong with received data")
+		switch {
+		case errors.Is(err, ErrEmptyInput):
+			s.logger.Error(fmt.Sprintf("validation failed: %v", err))
+			return nil, status.Errorf(codes.InvalidArgument, "event data missing")
+		case errors.Is(err, ErrInvalidDate):
+			s.logger.Error(fmt.Sprintf("validation failed: %v", err))
+			return nil, status.Errorf(codes.InvalidArgument, "invalid date format")
+		default:
+			s.logger.Error(fmt.Sprintf("unexpected error: %v", err))
+			return nil, status.Errorf(codes.Internal, "something went wrong, pls try again a bit later")
+		}
 	}
 
 	if err := s.application.CreateEvent(ctx, eventValidated); err != nil {
