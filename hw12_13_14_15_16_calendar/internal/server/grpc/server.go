@@ -73,7 +73,6 @@ func fromProtoEvent(pe *calendarpb.Event) (storage.Event, error) {
 
 	start := parseTimePtr(pe.Start)
 	if start == nil {
-		//return storage.Event{}, fmt.Errorf("invalid start time: %q", pe.Start)
 		return storage.Event{}, fmt.Errorf(
 			"%w: expected RFC3339, got %q", ErrInvalidDate, pe.Start,
 		)
@@ -83,7 +82,6 @@ func fromProtoEvent(pe *calendarpb.Event) (storage.Event, error) {
 	if pe.End != "" {
 		end = parseTimePtr(pe.End)
 		if end == nil {
-			//return storage.Event{}, fmt.Errorf("invalid end time: %q", pe.End)
 			return storage.Event{}, fmt.Errorf(
 				"%w: expected RFC3339, got %q", ErrInvalidDate, pe.End,
 			)
@@ -165,7 +163,6 @@ func (s *EventServer) CreateEvent(
 	ctx context.Context,
 	req *calendarpb.CreateEventRequest,
 ) (*calendarpb.CreateEventResponse, error) {
-
 	eventValidated, err := fromProtoEvent(req.Event)
 	if err != nil {
 		switch {
@@ -252,7 +249,6 @@ func (s *EventServer) UpdateEvent(
 	ctx context.Context,
 	req *calendarpb.UpdateEventRequest,
 ) (*calendarpb.UpdateEventResponse, error) {
-
 	if req.Event == nil {
 		s.logger.Error("Update Event failed: client provided no event data")
 		return &calendarpb.UpdateEventResponse{
@@ -285,7 +281,6 @@ func (s *EventServer) DeleteEvent(
 	ctx context.Context,
 	req *calendarpb.DeleteEventRequest,
 ) (*calendarpb.DeleteEventResponse, error) {
-
 	if err := s.application.DeleteEvent(ctx, int(req.Id)); err != nil {
 		s.logger.Error(fmt.Sprintf("failed to delete event: %v", err))
 		return nil, status.Errorf(codes.Internal, fmt.Sprintf("%v", ErrInternal))
