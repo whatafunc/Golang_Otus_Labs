@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 	"time"
 
@@ -48,10 +49,27 @@ func runGooseMigrations(dsn, migrationsPath string) error {
 	if err != nil {
 		return err
 	}
+
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
-		return err
+		errorMsg := err.Error()
+		// Sanitize the error to remove the DSN
+		// Remove DSN details from error message
+		re := regexp.MustCompile(`host=[^\s]+`)
+		errorMsg = re.ReplaceAllString(errorMsg, "host=***")
+
+		re = regexp.MustCompile(`user=[^\s]+`)
+		errorMsg = re.ReplaceAllString(errorMsg, "user=***")
+
+		re = regexp.MustCompile(`password=[^\s]+`)
+		errorMsg = re.ReplaceAllString(errorMsg, "password=***")
+
+		re = regexp.MustCompile(`dbname=[^\s]+`)
+		errorMsg = re.ReplaceAllString(errorMsg, "dbname=***")
+
+		return fmt.Errorf("failed to open database connection: %s", errorMsg)
 	}
+
 	defer db.Close()
 	if err := goose.SetDialect("postgres"); err != nil {
 		return err
@@ -75,7 +93,8 @@ func TestCreateAndGetEvent(t *testing.T) {
 	cfg.DSN = dsn
 	fmt.Println("ENV POSTGRES_DSN: ", dsn)
 	if err := runGooseMigrations(cfg.DSN, migrationsPath); err != nil {
-		t.Fatalf("Failed to run goose migrations: %v", err)
+		// t.Fatalf("Failed to run goose migrations: %v", err)
+		t.Fatalf("Failed to run goose migrations: please check DSN privatelly")
 	}
 	store := New(cfg)
 	ctx := context.Background()
