@@ -10,6 +10,6 @@ grpc:
 storage:
   type: "memory" # "memory"  or  "postgres"
   postgres:
-    dsn: "---" #migration = "migrations"
+    dsn: "----" #migration = "migrations"
 
 migrationsPath: "./migrations"
