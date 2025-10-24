@@ -93,7 +93,6 @@ func TestCreateAndGetEvent(t *testing.T) {
 	cfg.DSN = dsn
 	fmt.Println("ENV POSTGRES_DSN: ", dsn)
 	if err := runGooseMigrations(cfg.DSN, migrationsPath); err != nil {
-		// t.Fatalf("Failed to run goose migrations: %v", err)
 		t.Fatalf("Failed to run goose migrations: please check DSN privatelly")
 	}
 	store := New(cfg)
