@@ -15,10 +15,10 @@ curl -X POST http://localhost:8081/api/create \
   -H "Content-Type: application/json" \
   -d '{
      "event": {
-       "title": "Test chicken 2",
+       "title": "Test chicken 3",
        "description": "This is a test event",
-       "start": "2025-08-13T10:00:00Z",
-       "end": "2025-08-15T11:00:00Z",
+       "start": "2025-10-22T10:00:00Z",
+       "end": "2025-10-22T11:00:00Z",
        "allDay": false,
        "clinic": "Test Clinic",
        "userId": 123,
@@ -82,19 +82,18 @@ curl -X GET http://localhost:8081/api/get/26 | jq '.'
 
 echo
 echo "4.2 Testing get Existing event endpoint..."
-curl -X GET http://localhost:8081/api/get/75 | jq '.'
+curl -X GET http://localhost:8081/api/get/2 | jq '.'
 
 echo
 echo "5. Testing delete endpoint..."
-curl -X DELETE http://localhost:8081/api/delete/78
+curl -X DELETE http://localhost:8081/api/delete/1
 
 echo
 echo "6. Update event"
-curl -X PUT http://localhost:8081/api/update/78 \
+curl -X PUT http://localhost:8081/api/update/2 \
   -H "Content-Type: application/json" \
   -d '{
       "event": {
-        "id": 85,
         "title": "Test Meeting1-vera1",
         "description": "This is a test event1",
         "start_time": "2025-08-17T10:00:00Z",
