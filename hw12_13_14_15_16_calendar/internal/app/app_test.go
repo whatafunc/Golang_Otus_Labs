@@ -1,4 +1,3 @@
-//nolint:depguard
 package app
 
 import (
@@ -6,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/logger"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/logger"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
 )
 
 var (
@@ -84,6 +83,25 @@ func (f *fakeStorage) DeleteEvent(ctx context.Context, id int) error {
 	return nil
 }
 
+func (f *fakeStorage) UpdateEvent(ctx context.Context, event storage.Event) error {
+	select {
+	case <-ctx.Done():
+		return ErrContextCancel
+	default:
+	}
+
+	if _, exists := f.events[event.ID]; !exists {
+		return ErrNotFound
+	}
+
+	// Only update the title in this simple mock
+	existing := f.events[event.ID]
+	existing.Title = event.Title
+	f.events[event.ID] = existing
+
+	return nil
+}
+
 func TestApp_CreateEvent(t *testing.T) {
 	t.Parallel()
 
@@ -112,7 +130,8 @@ func TestApp_CreateEvent(t *testing.T) {
 			}
 
 			// Exercise
-			err := app.CreateEvent(ctx, tc.id, tc.title)
+			event := storage.Event{ID: tc.id, Title: tc.title}
+			err := app.CreateEvent(ctx, event)
 
 			// Verify
 			if tc.wantErr {

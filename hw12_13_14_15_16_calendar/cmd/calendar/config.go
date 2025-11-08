@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config" //nolint:depguard
-	"gopkg.in/yaml.v3"                                                             //nolint:depguard
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
+	"gopkg.in/yaml.v3"
 )
 
 func LoadConfig(path string) (config.Config, error) {

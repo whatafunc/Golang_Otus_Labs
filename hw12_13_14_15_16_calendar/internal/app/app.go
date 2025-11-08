@@ -1,4 +1,3 @@
-//nolint:depguard // not finished app
 package app
 
 import (
@@ -6,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/logger"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
-	memorystorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/memory"
-	postgresstorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage/sql"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/logger"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
+	memorystorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage/memory"
+	postgresstorage "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage/sql"
 )
 
 // App is the main application structure.
@@ -26,8 +25,6 @@ func NewWithConfig(cfg config.Config, log *logger.Logger) *App {
 	switch cfg.Storage.Type {
 	case "memory":
 		store = memorystorage.New()
-	// case "redis":
-	// 	store = redisstorage.New(cfg.Storage.Redis)
 	case "postgres":
 		store = postgresstorage.New(cfg.Storage.Postgres)
 	default:
@@ -45,17 +42,32 @@ func NewWithConfig(cfg config.Config, log *logger.Logger) *App {
 type storageInterface interface {
 	CreateEvent(ctx context.Context, event storage.Event) error
 	GetEvent(ctx context.Context, id int) (storage.Event, error)
-	ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error) // Updated
+	ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error)
+	UpdateEvent(ctx context.Context, event storage.Event) error
 	DeleteEvent(ctx context.Context, id int) error
 }
 
 // CreateEvent adds a new event using the configured storage.
-func (a *App) CreateEvent(ctx context.Context, id int, title string) error {
-	event := storage.Event{
-		ID:    id,
-		Title: title,
-	}
+func (a *App) CreateEvent(ctx context.Context, event storage.Event) error {
 	return a.store.CreateEvent(ctx, event)
 }
 
-// Optionally, you could add other methods like GetEvent, ListEvents etc.
+// GetEvent retrieves a single event from the configured storage.
+func (a *App) GetEvent(ctx context.Context, id int) (storage.Event, error) {
+	return a.store.GetEvent(ctx, id)
+}
+
+// ListEvents retrieves events from the configured storage.
+func (a *App) ListEvents(ctx context.Context, period storage.Period) ([]storage.Event, error) {
+	return a.store.ListEvents(ctx, period)
+}
+
+// DeleteEvent removes an event from the configured storage.
+func (a *App) DeleteEvent(ctx context.Context, id int) error {
+	return a.store.DeleteEvent(ctx, id)
+}
+
+// UpdateEvent updates an event from the configured storage.
+func (a *App) UpdateEvent(ctx context.Context, event storage.Event) error {
+	return a.store.UpdateEvent(ctx, event)
+}

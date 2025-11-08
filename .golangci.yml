@@ -2,26 +2,41 @@ run:
   tests: true
   build-tags:
     - bench
-    - !bench
 
 linters-settings:
-  funlen:
-    lines: 150
-    statements: 80
   depguard:
     rules:
-      Main:
+      main:  # ← Changed from "Main" to "main"
         files:
-          - $all
-          - "!$test"
+          - ^internal/.*
+          - ^cmd/.*
+        allowRegexp: true
         allow:
           - $gostd
-      Test:
+          - ^google\.golang\.org/grpc(/.*)?$
+          - ^google\.golang\.org/protobuf(/.*)?$  # ← Broader pattern
+          - ^github\.com/grpc-ecosystem/grpc-gateway(/.*)?$  # ← Broader pattern
+          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar(/.*)?$  # ← Broader pattern
+
+      test:  # ← Changed from "Test" to "test"
         files:
-          - $test
+          - _test\.go$
+        allowRegexp: true
+        allow:
+          - $gostd  # ← CRITICAL: Added this line
+          - ^github\.com/stretchr/testify(/.*)?$
+          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar(/.*)?$  # ← Broader pattern
+
+      NoCmdImports:
+        files:
+          - ^(?!cmd/).*\.go$
+        allowRegexp: true
         allow:
           - $gostd
-          - github.com/stretchr/testify
+        denyRegexp:
+          - ^github\.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/cmd(/.*)?$
+        message: "Do not import cmd/ from non-cmd packages (clean architecture rule)"
+
 issues:
   exclude-rules:
     - path: _test\.go

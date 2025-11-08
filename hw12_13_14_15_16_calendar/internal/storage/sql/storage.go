@@ -7,9 +7,9 @@ import (
 	"fmt"
 
 	// Import pgx driver for database/sql usage with Postgres storage.
-	_ "github.com/jackc/pgx/v4/stdlib"                                              //nolint:depguard // allowed as per our webinars
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/config"  //nolint:depguard
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage" //nolint:depguard
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
 )
 
 var (
@@ -126,5 +126,31 @@ func (s *Storage) DeleteEvent(ctx context.Context, id int) error {
 		return ErrNotFound
 	}
 
+	return nil
+}
+
+// UpdateEvent updates an existing event by ID.
+// It returns ErrNotFound if the event doesn't exist.
+func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) error {
+	query := `UPDATE events
+              SET title = $1,
+                  description = $2,
+                  start = $3,
+                  "end" = $4,
+                  allday = $5,
+                  clinic = $6,
+                  userid = $7,
+                  service = $8
+              WHERE id = $9`
+	result, err := s.db.ExecContext(ctx, query,
+		event.Title, event.Description, event.Start, event.End,
+		event.AllDay, event.Clinic, event.UserID, event.Service, event.ID)
+	if err != nil {
+		return fmt.Errorf("failed to update event: %w", err)
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return ErrNotFound
+	}
 	return nil
 }

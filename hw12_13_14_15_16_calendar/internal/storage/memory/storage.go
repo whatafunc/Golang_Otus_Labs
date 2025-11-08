@@ -1,4 +1,3 @@
-//nolint:depguard // allowed - temporary
 package memorystorage
 
 import (
@@ -8,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_calendar/internal/storage"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
 )
 
 var ErrNotFound = errors.New("event not found")
@@ -103,8 +102,21 @@ func (s *Storage) ListEvents(ctx context.Context, period storage.Period) ([]stor
 			case <-ctx.Done():
 				return nil, fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
 			default:
-				if period == storage.PeriodAll || matchesPeriod(*event.Start, now, period) {
+				if period == storage.PeriodAll {
 					result = append(result, event)
+					continue
+				}
+
+				if event.Start == nil {
+					fmt.Printf("[WARN] Skipping event ID %d: no Start time set\n", event.ID)
+					continue
+				}
+
+				if matchesPeriod(*event.Start, now, period) {
+					result = append(result, event)
+				} else {
+					fmt.Printf("[WARN] Skipping event ID %d: Start time %v does not match period %v\n",
+						event.ID, event.Start.Format(time.RFC3339), period)
 				}
 			}
 		}
@@ -187,6 +199,23 @@ func (s *Storage) ClearAll(ctx context.Context) error {
 	default:
 		s.events = make(map[int]storage.Event)
 		s.nextID = 1
+		return nil
+	}
+}
+
+func (s *Storage) UpdateEvent(ctx context.Context, event storage.Event) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("context canceled after acquiring lock: %w", ctx.Err())
+	default:
+		if _, ok := s.events[event.ID]; !ok {
+			return fmt.Errorf("event with ID %d not found", event.ID)
+		}
+
+		s.events[event.ID] = event
 		return nil
 	}
 }

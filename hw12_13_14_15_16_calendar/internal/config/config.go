@@ -5,6 +5,7 @@ type Config struct {
 	HTTP           HTTPConf      `yaml:"http"`
 	Storage        StorageConfig `yaml:"storage"`
 	MigrationsPath string        `yaml:"migrationsPath"`
+	GRPC           GRPCConfig    `yaml:"grpc"`
 }
 
 type LoggerConf struct {
@@ -17,16 +18,13 @@ type HTTPConf struct {
 
 type StorageConfig struct {
 	Type     string         `yaml:"type"`
-	Redis    RedisConfig    `yaml:"redis"`
 	Postgres PostgresConfig `yaml:"postgres"`
-}
-
-type RedisConfig struct {
-	Addr     string `yaml:"addr"`
-	Password string `yaml:"password"`
-	DB       int    `yaml:"db"`
 }
 
 type PostgresConfig struct {
 	DSN string `yaml:"dsn"`
+}
+
+type GRPCConfig struct {
+	ListenGrpc string `yaml:"listenGrpc"`
 }

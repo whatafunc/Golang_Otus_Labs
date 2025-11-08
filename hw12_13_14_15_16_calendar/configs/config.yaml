@@ -4,9 +4,12 @@ logger:
 http:
   listen: ":8081"
 
+grpc:
+  listenGrpc: ":50051"
+
 storage:
   type: "memory" # "memory"  or  "postgres"
   postgres:
-    dsn: "test_DSN_replaced_by_SECRETS" #migration = "migrations"
+    dsn: "---" #migration = "migrations"
 
 migrationsPath: "./migrations"
