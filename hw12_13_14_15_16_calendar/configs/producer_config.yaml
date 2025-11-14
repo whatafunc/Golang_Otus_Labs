@@ -4,7 +4,7 @@ rabbit:
   host: "192.168.1.71"         #AMQP URI host
   port: "5672"
   exchange: "test-exchange" #Durable, non-auto-deleted AMQP exchange name
-  exchange-type: "direct"   #Exchange type - direct|fanout|topic|x-custom")
+  exchangeType: "direct"   #Exchange type - direct|fanout|topic|x-custom")
   queue: "test-queue"       #Ephemeral AMQP queue name
   key: "test-key"           #AMQP binding key
   consumerTag: "simple-consumer"  #AMQP consumer tag (should not be blank)

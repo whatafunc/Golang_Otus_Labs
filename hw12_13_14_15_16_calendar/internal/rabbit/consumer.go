@@ -14,7 +14,7 @@ type Consumer struct {
 	msgs    <-chan amqp.Delivery
 }
 
-// NewConsumer sets up a RabbitMQ consumer
+// NewConsumer sets up a RabbitMQ consumer.
 func NewConsumer(uri, queue, tag string) (*Consumer, error) {
 	conn, err := amqp.Dial(uri)
 	if err != nil {
