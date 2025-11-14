@@ -8,10 +8,9 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
-	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/app"
-
-	// "github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/logger"
 	"github.com/robfig/cron/v3"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/app"
+	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/storage"
 )
 
 // Event represents the structure of an event.
@@ -68,9 +67,9 @@ func (p *Producer) Publish(body []byte) error {
 
 func (p *Producer) Start(quit <-chan struct{}) {
 	// Create a new cron scheduler
-	c := cron.New() // supports seconds if you want "every 10s" intervals
+	c := cron.New() // supports seconds like "every 10s" intervals
 
-	// Schedule hourly job (configurable interval would be better)
+	// Schedule hourly job (configurable interval maybe later)
 	_, err := c.AddFunc("@every 1h", func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
@@ -105,7 +104,7 @@ func (p *Producer) Shutdown() error {
 
 // ListEventsDay generates and publishes event data for the day.
 func (p *Producer) ListEventsDay(ctx context.Context) error {
-	events, err := p.app.ListEvents(ctx, app.PeriodDay)
+	events, err := p.app.ListEvents(ctx, storage.PeriodDay)
 	if err != nil {
 		log.Printf("failed to list day events: %v", err)
 		return fmt.Errorf("failed to list day events: %w", err)

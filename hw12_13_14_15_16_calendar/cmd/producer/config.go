@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/whatafunc/Golang_Otus_Labs/hw12_13_14_15_16_calendar/internal/config"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -15,7 +14,7 @@ type RabbitConfig struct {
 	Host         string `yaml:"host"`
 	Port         string `yaml:"port"`
 	Exchange     string `yaml:"exchange"`
-	ExchangeType string `yaml:"exchange-type"`
+	ExchangeType string `yaml:"exchangeType"`
 	Queue        string `yaml:"queue"`
 	Key          string `yaml:"key"`
 	ConsumerTag  string `yaml:"consumerTag"`

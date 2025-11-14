@@ -13,7 +13,7 @@ type ConsumerConfig struct {
 	Host         string `yaml:"host"`
 	Port         string `yaml:"port"`
 	Exchange     string `yaml:"exchange"`
-	ExchangeType string `yaml:"exchange-type"`
+	ExchangeType string `yaml:"exchangeType"`
 	Queue        string `yaml:"queue"`
 	Key          string `yaml:"key"`
 	ConsumerTag  string `yaml:"consumerTag"`

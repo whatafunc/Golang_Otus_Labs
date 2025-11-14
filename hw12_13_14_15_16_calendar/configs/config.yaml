@@ -8,7 +8,7 @@ grpc:
   listenGrpc: ":50051"
 
 storage:
-  type: "memory" # "memory"  or  "postgres"
+  type: "postgres" # "memory"  or  "postgres"
   postgres:
     dsn: "---" #migration = "migrations"
 

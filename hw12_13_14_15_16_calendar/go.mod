@@ -6,8 +6,11 @@ toolchain go1.24.5
 
 require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0
+	github.com/rabbitmq/amqp091-go v1.10.0
+	github.com/robfig/cron/v3 v3.0.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20250811230008-5f3141c8851a
 	google.golang.org/protobuf v1.36.7
+	gopkg.in/yaml.v2 v2.2.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 

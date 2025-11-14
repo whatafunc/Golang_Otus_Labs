@@ -25,7 +25,6 @@ func main() {
 	cfg, err := LoadConfig(configFile)
 	if err != nil {
 		logg.Error("failed to load config: " + err.Error())
-		//fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
 		os.Exit(1)
 	}
 	logg.Info(fmt.Sprintf("✅ Config loaded: %+v", cfg))
