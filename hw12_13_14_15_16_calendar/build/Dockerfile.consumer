@@ -1,0 +1,29 @@
+# --- Build Stage (The single "builder") ---
+FROM golang:1.23 as build
+
+WORKDIR /go/src/
+
+# Copy all source code once
+COPY . .
+
+# Download dependencies once
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+# --- Compile the consumer application ---
+RUN CGO_ENABLED=0 go build -o /app/consumer ./cmd/consumer
+
+
+# --- FINAL STAGE: The Consumer App ---
+FROM alpine:3.9 as consumer-final
+
+LABEL SERVICE="consumer"
+
+# Copy the consumer app binary
+COPY --from=build /app/consumer /usr/local/bin/
+
+# Copy the consumer config file
+COPY ./configs/consumer_config.yaml /etc/calendar/consumer_config.yaml
+
+CMD ["consumer", "-config", "/etc/calendar/consumer_config.yaml"]
