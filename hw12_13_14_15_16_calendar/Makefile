@@ -1,6 +1,7 @@
 BIN := "./bin/calendar"
 DOCKER_IMG="calendar:develop"
 COMPOSE_FILE := "deployments/docker-compose.yaml"
+COMPOSE_TEST_FILE := "deployments/docker-compose.test.yaml"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
@@ -23,9 +24,9 @@ LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%d
 # version: build
 # 	$(BIN) version
 
-# test:
-# #	go test -race ./internal/... ./pkg/...
-# 	go test -race ./internal/...
+test:
+#	go test -race ./internal/... ./pkg/...
+	go test -race ./internal/...
 
 # install-lint-deps:
 # 	(which golangci-lint > /dev/null) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.64.8
@@ -73,4 +74,12 @@ clean: down
 # Rebuild and restart services
 rebuild: down build up
 
-.PHONY: build run build-img run-img version test lint up down build logs clean
+# Integration tests
+integration-tests:
+	docker-compose -f $(COMPOSE_TEST_FILE) up \
+		--abort-on-container-exit \
+		--exit-code-from integration-tests \
+		integration-tests
+	docker-compose -f $(COMPOSE_TEST_FILE) down
+
+.PHONY: build run build-img run-img version test install-lint-deps lint up down build logs stop start restart ps clean rebuild integration-tests

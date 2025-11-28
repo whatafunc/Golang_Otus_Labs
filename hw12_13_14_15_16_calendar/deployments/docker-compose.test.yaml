@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  calendar:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.calendar
+    container_name: calendar-app
+    ports:
+      - "8888:8081" # HTTP API
+      - "50051:50051" # gRPC API
+    environment:
+      # This DSN is used by the entrypoint script to run 'goose' migrations.
+      - POSTGRES_DSN=host=events-postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  consumer:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.consumer
+    container_name: consumer-app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  producer:
+    build:
+      context: ..
+      dockerfile: build/Dockerfile.producer
+    container_name: producer-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: events-postgres
+    environment:
+      POSTGRES_DB: events
+      POSTGRES_USER: otus_user1
+      POSTGRES_PASSWORD: otus_password1
+    volumes:
+      - pg_events_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U otus_user1 -d events"]
+      interval: 10s
+      timeout: 15s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: my_rabbitmq
+    hostname: my-rabbitmq-host
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    # The default guest/guest user is sufficient for this setup
+    # and matches the producer/consumer configs.
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  integration-tests:
+    build:
+      context: ../integration-tests
+      dockerfile: Dockerfile.test
+    container_name: integration-tests
+    environment:
+      - CALENDAR_API_URL=http://calendar:8081
+      - POSTGRES_DSN=host=postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable
+    depends_on:
+      calendar:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+volumes:
+  rabbitmq_data:
+  pg_events_data:
