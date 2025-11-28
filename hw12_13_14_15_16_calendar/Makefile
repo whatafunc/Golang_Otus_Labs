@@ -1,6 +1,6 @@
 BIN := "./bin/calendar"
 DOCKER_IMG="calendar:develop"
-COMPOSE_FILE := "./../deployments/docker-compose.yaml"
+COMPOSE_FILE := "deployments/docker-compose.yaml"
 
 GIT_HASH := $(shell git log --format="%h" -n 1)
 LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
@@ -43,7 +43,7 @@ down:
 
 # Build all services without starting them
 build:
-	docker-compose -f $(COMPOSE_FILE) build
+	docker compose -f $(COMPOSE_FILE) build
 
 # Follow logs from all services
 logs:
