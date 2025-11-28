@@ -159,6 +159,11 @@ const (
 
 // --- RPC Implementations ---
 
+func (s *EventServer) HealthCheck(ctx context.Context, req *emptypb.Empty) (*calendarpb.HealthResponse, error) {
+	s.logger.Info("health check requested")
+	return &calendarpb.HealthResponse{Status: "OK"}, nil
+}
+
 func (s *EventServer) CreateEvent(
 	ctx context.Context,
 	req *calendarpb.CreateEventRequest,

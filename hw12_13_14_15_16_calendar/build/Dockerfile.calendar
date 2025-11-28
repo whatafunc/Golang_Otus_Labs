@@ -1,0 +1,40 @@
+# --- Build Stage (The single "builder") ---
+FROM golang:1.23 as build
+
+WORKDIR /go/src/
+
+# Copy all source code once
+COPY . .
+
+# Download dependencies once
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+# Compile the calendar application
+ARG LDFLAGS
+RUN CGO_ENABLED=0 go build -ldflags "$LDFLAGS" -o /app/calendar ./cmd/calendar
+
+# Install statically linked goose for migrations
+RUN CGO_ENABLED=0 go install github.com/pressly/goose/v3/cmd/goose@latest
+
+
+# --- FINAL STAGE: The Calendar App ---
+FROM alpine:3.9 as calendar-final
+
+LABEL SERVICE="calendar"
+
+# Copy the main app binary, goose for migrations, the entrypoint script, and migration files
+COPY --from=build /app/calendar /usr/local/bin/
+COPY --from=build /go/bin/goose /usr/local/bin/
+COPY --from=build /go/src/migrations /migrations
+COPY docker-entrypoint-migrations.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Copy the config file
+COPY ./configs/config.yaml /etc/calendar/config.yaml
+
+EXPOSE 8081 50051
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["calendar", "-config", "/etc/calendar/config.yaml"]

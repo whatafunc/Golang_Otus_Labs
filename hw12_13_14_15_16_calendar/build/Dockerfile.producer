@@ -1,0 +1,29 @@
+# --- Build Stage (The single "builder") ---
+FROM golang:1.23 as build
+
+WORKDIR /go/src/
+
+# Copy all source code once
+COPY . .
+
+# Download dependencies once
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
+# --- Compile the producer application ---
+RUN CGO_ENABLED=0 go build -o /app/producer ./cmd/producer
+
+
+# --- FINAL STAGE: The Producer App ---
+FROM alpine:3.9 as producer-final
+
+LABEL SERVICE="producer"
+
+# Copy the producer app binary
+COPY --from=build /app/producer /usr/local/bin/
+
+# Copy the producer config file
+COPY ./configs/producer_config.yaml /etc/calendar/producer_config.yaml
+
+CMD ["producer", "-config", "/etc/calendar/producer_config.yaml"]

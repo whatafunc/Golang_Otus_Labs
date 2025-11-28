@@ -10,6 +10,6 @@ grpc:
 storage:
   type: "postgres" # "memory"  or  "postgres"
   postgres:
-    dsn: "---" #migration = "migrations"
+    dsn: "host=events-postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable" #migration = "migrations"
 
 migrationsPath: "./migrations"
