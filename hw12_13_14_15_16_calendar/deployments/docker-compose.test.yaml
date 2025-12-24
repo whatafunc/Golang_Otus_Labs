@@ -71,6 +71,20 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+  integration-tests:
+    build:
+      context: ../integration-tests
+      dockerfile: Dockerfile.test
+    container_name: integration-tests
+    environment:
+      - CALENDAR_API_URL=http://calendar:8081
+      - POSTGRES_DSN=host=postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable
+    depends_on:
+      calendar:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
 volumes:
   rabbitmq_data:
   pg_events_data:
