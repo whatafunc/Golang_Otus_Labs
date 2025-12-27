@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: calendar-config
+  namespace: calendar
+data:
+  config.yaml: |
+    logger:
+      level: "info" # info or error
+
+    http:
+      listen: ":8081"
+
+    grpc:
+      listenGrpc: ":50051"
+
+    storage:
+      type: "postgres" # "memory"  or  "postgres"
+      postgres:
+        dsn: "host=postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable" #migration = "migrations"
+
+    migrationsPath: "./migrations"

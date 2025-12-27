@@ -1,22 +1,59 @@
 replicaCount: 1
 
 image:
-  repository: my-calendar-app
+  repository: deployments-calendar
   tag: "latest"
   pullPolicy: IfNotPresent
 
+# producer:
+#   enabled: true
+#   replicaCount: 1
+#   image:
+#     repository: deployments-producer
+#     tag: "latest"
+#     pullPolicy: IfNotPresent
+#   service:
+#     type: NodePort
+#     port: 8082
+#     nodePort: 30091
+#   containerPort: 8082
+#   ingress:
+#     enabled: false
+
+# consumer:
+#   enabled: true
+#   replicaCount: 1
+#   image:
+#     repository: deployments-consumer
+#     tag: "latest"
+#     pullPolicy: IfNotPresent
+#   service:
+#     type: NodePort
+#     port: 8083
+#     nodePort: 30092
+#   containerPort: 8083
+#   ingress:
+#     enabled: false
+#   service:
+#     type: NodePort
+#     port: 8083
+#     nodePort: 30092
+#   containerPort: 8083
+#   ingress:
+#     enabled: false
+
 service:
-  type: ClusterIP
-  port: 80
+  # type: ClusterIP
+  # port: 80 #hostPort: 8055 # it works for extraPortMappings in `kind-example-config.yaml`
+  type: NodePort ##another mode :  to expose the service
+  port: 8081
+  nodePort: 30090
 
 ingress:
-  enabled: false
-  annotations: {}
+  enabled: true
+  className: nginx
   hosts:
-    - host: chart-example.local
-      paths: []
-  tls: []
-
-resources: {}
-nodeSelector: {}
-affinity: {}
+    - host: myapp.local
+      paths:
+        - path: /
+          pathType: Prefix
