@@ -43,11 +43,11 @@ image:
 #     enabled: false
 
 service:
-  # type: ClusterIP
-  # port: 80 #hostPort: 8055 # it works for extraPortMappings in `kind-example-config.yaml`
-  type: NodePort ##another mode :  to expose the service
-  port: 8081
-  nodePort: 30090
+  type: ClusterIP
+  port: 80 #hostPort: 8055 # it works for extraPortMappings in `kind-example-config.yaml`
+  # type: NodePort ##another mode :  to expose the service
+  # port: 8081
+  # nodePort: 30090
 
 ingress:
   enabled: true

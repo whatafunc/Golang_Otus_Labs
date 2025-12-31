@@ -1,4 +1,7 @@
-# Start cloud provider running in our cluster
+# Start cloud provider running in our cluster - just the standard k3s components:
+# CoreDNS, local-path-provisioner, and metrics-server. 
+# This is a clean slate.
+colima start --arch x86_64 --cpu 2 --memory 3 --disk 30 --mount-type sshfs --runtime docker --dns 8.8.8.8 --dns 1.1.1.1 --kubernetes --network-address
 
 # Cluster.....................................................................
 # if `kubectl cluster-info` not exists:
