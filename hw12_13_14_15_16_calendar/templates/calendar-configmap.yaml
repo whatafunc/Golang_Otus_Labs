@@ -6,17 +6,17 @@ metadata:
 data:
   config.yaml: |
     logger:
-      level: "info" # info or error
+      level: "{{ .Values.calendarConfig.loggerLevel }}"
 
     http:
-      listen: ":8081"
+      listen: "{{ .Values.calendarConfig.httpListen }}"
 
     grpc:
-      listenGrpc: ":50051"
+      listenGrpc: "{{ .Values.calendarConfig.grpcListen }}"
 
     storage:
-      type: "postgres" # "memory"  or  "postgres"
+      type: "{{ .Values.calendarConfig.storageType }}"
       postgres:
-        dsn: "host=postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable" #migration = "migrations"
+        dsn: "{{ .Values.calendarConfig.postgresDsn }}"
 
-    migrationsPath: "./migrations"
+    migrationsPath: "{{ .Values.calendarConfig.migrationsPath }}"

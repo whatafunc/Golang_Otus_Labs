@@ -9,3 +9,31 @@ spec:
   ports:
     - port: {{ .Values.service.port }}
       targetPort: 8081
+---
+{{- if .Values.producer.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-producer
+spec:
+  type: {{ .Values.producer.service.type }}
+  selector:
+    app: {{ .Chart.Name }}-producer
+  ports:
+    - port: {{ .Values.producer.service.port }}
+      targetPort: {{ .Values.producer.containerPort }}
+{{- end }}
+---
+{{- if .Values.consumer.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-consumer
+spec:
+  type: {{ .Values.consumer.service.type }}
+  selector:
+    app: {{ .Chart.Name }}-consumer
+  ports:
+    - port: {{ .Values.consumer.service.port }}
+      targetPort: {{ .Values.consumer.containerPort }}
+{{- end }}

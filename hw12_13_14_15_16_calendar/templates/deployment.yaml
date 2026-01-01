@@ -20,12 +20,12 @@ spec:
         - name: app
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - containerPort: 8081
-            - containerPort: 50051
           env:
             - name: POSTGRES_DSN
-              value: "host=postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable"
+              value: "{{ .Values.calendarConfig.postgresDsn }}"
+          ports:
+            - containerPort: {{ .Values.calendarConfig.httpPort }}
+            - containerPort: {{ .Values.calendarConfig.grpcPort }}
           volumeMounts:
             - name: config-volume
               mountPath: /etc/calendar
