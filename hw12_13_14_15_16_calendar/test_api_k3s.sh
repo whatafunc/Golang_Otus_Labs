@@ -17,8 +17,8 @@ curl -X POST http://myapp.local/api/create \
      "event": {
        "title": "Test chicken 3",
        "description": "This is a test event",
-       "start": "2026-01-01T21:00:00Z",
-       "end": "2026-01-01T22:00:00Z",
+       "start": "2026-01-02T08:00:00Z",
+       "end": "2026-01-02T11:50:00Z",
        "allDay": false,
        "clinic": "Test Clinic",
        "userId": 123,

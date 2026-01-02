@@ -20,6 +20,6 @@ data:
       storage:
         type: "postgres"
         postgres:
-          dsn: "host=events-postgres port=5432 user=otus_user1 password=otus_user1 password=otus_password1 dbname=events sslmode=disable"
+          dsn: "host=postgres port=5432 user=otus_user1 password=otus_user1 password=otus_password1 dbname=events sslmode=disable"
       migrationsPath: "./migrations"
 {{- end }}

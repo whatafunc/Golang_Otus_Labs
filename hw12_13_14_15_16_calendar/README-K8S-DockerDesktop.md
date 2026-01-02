@@ -1,9 +1,6 @@
-# Start cloud provider running in our cluster - just the standard k3s components:
-# CoreDNS, local-path-provisioner, and metrics-server. 
-# This is a clean slate.
-colima start --arch x86_64 --cpu 2 --memory 3 --disk 30 --mount-type sshfs --runtime docker --dns 8.8.8.8 --dns 1.1.1.1 --kubernetes --network-address
+# Start cloud provider running in our cluster
 
-# Cluster.....................................................................
+# Cluster on macosc with Docker Desktop.....................................................................
 # if `kubectl cluster-info` not exists:
 kind create cluster --name calendar-k8s --config kind-cluster-config.yaml
 
@@ -16,7 +13,10 @@ CURRENT   NAME                CLUSTER             AUTHINFO            NAMESPACE
 *         kind-calendar-k8s   kind-calendar-k8s   kind-calendar-k8s   
           linkding
 
-kubectl cluster-info
+
+kubectl cluster-info --context kind-calendar-k8s
+Kubernetes control plane is running at https://0.0.0.0:6443
+CoreDNS is running at https://0.0.0.0:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 
@@ -46,8 +46,13 @@ ingress-nginx-admission   1          64s
 helm upgrade --install calendar-app . \
   --namespace calendar \
   --create-namespace
+
+
 # upload our containers into k8s
-kind load docker-image deployments-calendar:latest --name calendar-k8s
+kind load docker-image deployments-calendar:latest --name calendar-k8s && \
+kind load docker-image deployments-consumer:latest --name calendar-k8s && \
+kind load docker-image deployments-producer:latest --name calendar-k8s
+
 
 <!-- kubectl apply -f templates/calendar-configmap.yaml
 helm upgrade calendar-app . -n calendar -->
@@ -59,9 +64,10 @@ kubectl get pods -n calendar
 kubectl get svc -n calendar
 NAME           TYPE       CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
 calendar-app   NodePort   10.96.94.17   <none>        8081:30090/TCP   4m11s
- 
 
-kubectl logs calendar-app-75ddd987cb-hbl56 --tail=20 -n calendar
+curl -H "Host: myapp.local" http://localhost:30090
+
+kubectl logs calendar-app-75ddd987cb-blkxs --tail=20 -n calendar
 Defaulted container "app" out of: app, wait-for-postgres (init)
 POSTGRES_DSN is set. Running database migrations...
 2025/12/26 15:27:04 goose: no migrations to run. current version: 1
@@ -69,16 +75,6 @@ Migrations complete.
 Starting application...
 HTTP gateway listening on :8081
 gRPC server listening on :50051
-gRPC call start: /calendarGRPC.CalendarService/HealthCheck
-health check requested
-gRPC call end: /calendarGRPC.CalendarService/HealthCheck | duration: 21.701µs
-
-curl http://myapp.local/health
-{"status":"OK"}
-
-kubectl exec -it deploy/calendar -- curl http://producer:8082
-kubectl exec -it deploy/calendar -- curl http://consumer:8083
-
 
 # App stop and cleanup ................................................................
 helm uninstall calendar-app -n calendar
@@ -87,3 +83,15 @@ kind delete cluster --name calendar-k8s
 
 
 kubectl logs ingress-nginx-controller-5fd9b9dddd-49pn9 -n ingress-nginx
+
+kubectl get pods -n calendar -o name \
+| xargs -I {} kubectl logs -n calendar {} \
+  --all-containers=true \
+  --prefix=true \
+  --tail=100
+
+ 
+ 
+kubectl logs calendar-app-producer-58cc5559d8-7vzln --tail=20 -n calendar 
+
+kubectl logs calendar-app-consumer-9f69dfcf7-429qk --tail=20 -n calendar 
