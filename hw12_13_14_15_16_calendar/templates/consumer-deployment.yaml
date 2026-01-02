@@ -1,0 +1,31 @@
+{{- if .Values.consumer.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-consumer
+  labels:
+    app: {{ .Chart.Name }}-consumer
+spec:
+  replicas: {{ .Values.consumer.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-consumer
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-consumer
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-consumer-config
+      containers:
+        - name: consumer
+          image: "{{ .Values.consumer.image.repository }}:{{ .Values.consumer.image.tag }}"
+          imagePullPolicy: {{ .Values.consumer.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.consumer.containerPort }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/calendar
+{{- end }}

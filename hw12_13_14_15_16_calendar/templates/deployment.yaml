@@ -1,2 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nc -z postgres 5432; do echo "waiting for postgres..."; sleep 2; done;']
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: POSTGRES_DSN
+              value: "{{ .Values.calendarConfig.postgresDsn }}"
+          ports:
+            - containerPort: {{ .Values.calendarConfig.httpPort }}
+            - containerPort: {{ .Values.calendarConfig.grpcPort }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/calendar
+      volumes:
+        - name: config-volume
+          configMap:
+            name: calendar-config

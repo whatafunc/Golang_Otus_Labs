@@ -1,0 +1,25 @@
+{{- if .Values.producer.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-producer-config
+data:
+  producer_config.yaml: |
+    rabbit:
+      user: "guest"
+      password: "guest"
+      host: "rabbitmq"
+      port: "5672"
+      exchange: "test-exchange"
+      exchangeType: "direct"
+      queue: "test-queue"
+      key: "test-key"
+      consumerTag: "simple-consumer"
+      sync: true
+    config:
+      storage:
+        type: "postgres"
+        postgres:
+          dsn: "host=postgres port=5432 user=otus_user1 password=otus_user1 password=otus_password1 dbname=events sslmode=disable"
+      migrationsPath: "./migrations"
+{{- end }}

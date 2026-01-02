@@ -1,7 +1,7 @@
 rabbit:
   user: "guest"
   password: "guest"
-  host: "my_rabbitmq"         #AMQP URI host
+  host: "my-rabbitmq"         #AMQP URI host (no underscores to follow k8s hostnaming conventions)
   port: "5672"
   exchange: "test-exchange" #Durable, non-auto-deleted AMQP exchange name
   exchangeType: "direct"   #Exchange type - direct|fanout|topic|x-custom")
@@ -14,5 +14,5 @@ config:
   storage:
     type: "postgres"
     postgres:
-      dsn: "host=events-postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable" #migration = "migrations"
+      dsn: "host=postgres port=5432 user=otus_user1 password=otus_password1 dbname=events sslmode=disable" #migration = "migrations"
   migrationsPath: "./migrations"

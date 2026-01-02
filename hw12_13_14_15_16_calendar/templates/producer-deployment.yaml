@@ -1,0 +1,31 @@
+{{- if .Values.producer.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-producer
+  labels:
+    app: {{ .Chart.Name }}-producer
+spec:
+  replicas: {{ .Values.producer.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-producer
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-producer
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-producer-config
+      containers:
+        - name: producer
+          image: "{{ .Values.producer.image.repository }}:{{ .Values.producer.image.tag }}"
+          imagePullPolicy: {{ .Values.producer.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.producer.containerPort }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/calendar
+{{- end }}
