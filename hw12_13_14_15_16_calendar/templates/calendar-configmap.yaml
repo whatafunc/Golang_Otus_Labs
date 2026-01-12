@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: calendar-config
+  namespace: calendar
+data:
+  config.yaml: |
+    logger:
+      level: "{{ .Values.calendarConfig.loggerLevel }}"
+
+    http:
+      listen: "{{ .Values.calendarConfig.httpListen }}"
+
+    grpc:
+      listenGrpc: "{{ .Values.calendarConfig.grpcListen }}"
+
+    storage:
+      type: "{{ .Values.calendarConfig.storageType }}"
+      postgres:
+        dsn: "{{ .Values.calendarConfig.postgresDsn }}"
+
+    migrationsPath: "{{ .Values.calendarConfig.migrationsPath }}"

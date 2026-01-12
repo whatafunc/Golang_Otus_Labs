@@ -55,7 +55,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: my_rabbitmq
+    container_name: my-rabbitmq
     hostname: my-rabbitmq-host
     restart: unless-stopped
     healthcheck:
