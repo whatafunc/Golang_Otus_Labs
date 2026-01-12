@@ -1,4 +1,5 @@
 # Start cloud provider running in our cluster
+Docker Desktop
 
 # Cluster on macosc with Docker Desktop.....................................................................
 # if `kubectl cluster-info` not exists:
@@ -28,7 +29,14 @@ kubectl get ingressclass
 NAME    CONTROLLER             PARAMETERS   AGE
 nginx   k8s.io/ingress-nginx   <none>       117s
 
+#for reinstall
+helm uninstall ingress-nginx -n ingress-nginx
+kubectl delete namespace ingress-nginx
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
 # else:
+
 helm install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace ingress-nginx \
   --create-namespace
@@ -79,7 +87,7 @@ gRPC server listening on :50051
 # App stop and cleanup ................................................................
 helm uninstall calendar-app -n calendar
 kind delete cluster --name calendar-k8s
-
+kubectl delete namespace ingress-nginx
 
 
 kubectl logs ingress-nginx-controller-5fd9b9dddd-49pn9 -n ingress-nginx

@@ -6,44 +6,39 @@ nodes:
     # port forward 80 on the host to 80 on this node
     extraPortMappings:
       - containerPort: 80
-        hostPort: 8088 ###### IT WAS 80 BUT CHANGED TO 8055 TO AVOID CONFLICT WITH LOCALHOST WEB SERVER ######
-        # optional: set the bind address on the host
-        # 0.0.0.0 is the current default
+        hostPort: 8088
         listenAddress: "0.0.0.0"
-        # optional: set the protocol to one of TCP, UDP, SCTP.
-        # TCP is the default
         protocol: TCP
       - containerPort: 443
         hostPort: 443
-        # optional: set the bind address on the host
-        # 0.0.0.0 is the current default
         listenAddress: "0.0.0.0"
-        # optional: set the protocol to one of TCP, UDP, SCTP.
-        # TCP is the default
         protocol: TCP
       - containerPort: 30000
         hostPort: 30000
-        # optional: set the bind address on the host
-        # 0.0.0.0 is the current default
         listenAddress: "0.0.0.0"
-        # optional: set the protocol to one of TCP, UDP, SCTP.
-        # TCP is the default
         protocol: TCP
-      - containerPort: 30090 # it works for NodePort service if defined in `app/values.yaml`
+      - containerPort: 30090
         hostPort: 30080
-        # optional: set the bind address on the host
-        # 0.0.0.0 is the current default
         listenAddress: "0.0.0.0"
-        # optional: set the protocol to one of TCP, UDP, SCTP.
-        # TCP is the default
         protocol: TCP
+    # Disable proxy for this node
+    kubeadmConfigPatches:
+    - |
+      kind: InitConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "ingress-ready=true"
   - role: worker
   - role: worker
 networking:
-  # WARNING: It is _strongly_ recommended that you keep this the default
-  # (127.0.0.1) for security reasons. However it is possible to change this.
   apiServerAddress: "127.0.0.1"
-  # By default the API server listens on a random open port.
-  # You may choose a specific port but probably don't need to in most cases.
-  # Using a random port makes it easier to spin up multiple clusters.
   apiServerPort: 6443
+# Add containerd config to bypass proxy
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+        endpoint = ["https://registry-1.docker.io"]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.k8s.io"]
+        endpoint = ["https://registry.k8s.io"]
