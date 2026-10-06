@@ -1,1 +1,0 @@
-/Users/mdx/Downloads/_REPOSITORIES-GO/Golang_Otus_Labs/hw01_hello_otus/hello_otus_rust/target/debug/hello_otus_rust: /Users/mdx/Downloads/_REPOSITORIES-GO/Golang_Otus_Labs/hw01_hello_otus/hello_otus_rust/src/main.rs /Users/mdx/Downloads/_REPOSITORIES-GO/Golang_Otus_Labs/hw01_hello_otus/hello_otus_rust/src/reverse.rs
