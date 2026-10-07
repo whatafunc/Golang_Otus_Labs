@@ -1,0 +1,23 @@
+name: Rust port tests
+
+on:
+  push:
+    branches:
+      - go-rust
+
+jobs:
+  rust_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log branch
+        run: echo "Rust tests Branch is ${{ github.ref }}"
+
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Test HW01 Rust port
+        run: cargo test
+        working-directory: hw01_hello_otus/rust
